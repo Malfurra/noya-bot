@@ -1,34 +1,38 @@
 const os   = require('os');
+const fs   = require('fs');
+const path = require('path');
+const { downloadContentFromMessage } = require('@phrolovaa/baileys');
 const Groq = require('groq-sdk');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { saveDb } = require('../database');
 const { resolveUser } = require('../utils/helpers');
 
 module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, config, dbs, sender) {
     const from   = msg.key.remoteJid;
-    const prompt = textWithoutPrefix.substring(command.length).trim();
+    let prompt   = textWithoutPrefix.substring(command.length).trim();
 
     const groq = config.groqApiKey ? new Groq({ apiKey: config.groqApiKey }) : null;
 
-    
     if (command === 'gemini') {
         if (!prompt) return await sock.sendMessage(from, { text: 'Mau tanya apa?' }, { quoted: msg });
-        if (!groq)   return await sock.sendMessage(from, { text: 'API Key Groq belum dipasang.' });
+        if (!process.env.GEMINI_API_KEY) return await sock.sendMessage(from, { text: 'API Key Gemini belum dipasang di .env.' });
 
         try {
             const statusMsg = await sock.sendMessage(from, { text: 'processing...' }, { quoted: msg });
-            const res = await groq.chat.completions.create({
-                messages: [{ role: 'user', content: prompt }],
-                model:    'llama-3.1-8b-instant'
-            });
-            const text = res.choices[0]?.message?.content || 'Gagal memproses.';
+            
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
+            
+            const result = await model.generateContent(prompt);
+            const text = result.response.text() || 'Gagal memproses.';
+            
             await sock.sendMessage(from, { text: 'done.', edit: statusMsg.key });
             return await sock.sendMessage(from, { text }, { quoted: msg });
         } catch (err) {
-            return await sock.sendMessage(from, { text: `Error: ${err.message}` });
+            return await sock.sendMessage(from, { text: `Error Gemini: ${err.message}` });
         }
     }
 
-  
     if (command === 'noya') {
         try {
             const userProfile = resolveUser(dbs.usersDb, sender);
@@ -42,20 +46,12 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
             const userName = userProfile.name;
             const userUid  = userProfile.uid;
 
-            if (!prompt) {
-                return await sock.sendMessage(from, {
-                    text: `Halo ${userName}! Noya di sini! Sini ngobrol sama Noya UwU`
-                }, { quoted: msg });
-            }
-
-            
             if (!dbs.noyaBrainDb)             dbs.noyaBrainDb   = {};
             if (!dbs.noyaHistoryDb)           dbs.noyaHistoryDb = {};
             if (!dbs.noyaHistoryDb[userUid])  dbs.noyaHistoryDb[userUid] = [];
             if (!dbs.userFactsDb)             dbs.userFactsDb   = {};
             if (!dbs.userFactsDb[userUid])    dbs.userFactsDb[userUid]   = [];
 
-           
             if (prompt.toLowerCase().startsWith('ajarin')) {
                 const ajarinText = prompt.substring(6).trim();
                 if (!ajarinText.includes('|')) {
@@ -74,7 +70,6 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
                 }, { quoted: msg });
             }
 
-           
             const userWords = prompt.toLowerCase();
             let foundAnswers = [];
             if (Array.isArray(dbs.noyaBrainDb[userWords])) {
@@ -94,8 +89,67 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
                 return await sock.sendMessage(from, { text: answer }, { quoted: msg });
             }
 
-           
             if (!groq) return await sock.sendMessage(from, { text: 'Noya lagi pusing, apikey Groq belum dipasang :(' });
+
+            const contextInfo = msg.message?.extendedTextMessage?.contextInfo;
+            const quotedMsg = contextInfo?.quotedMessage;
+            const quotedType = quotedMsg ? Object.keys(quotedMsg)[0] : null;
+
+            const mediaType = quotedType || Object.keys(msg.message || {})[0];
+            const mediaMessage = quotedMsg ? quotedMsg[quotedType] : msg.message[mediaType];
+
+            let base64Image = null;
+
+            if (quotedType === 'conversation' || quotedType === 'extendedTextMessage') {
+                const repliedText = quotedMsg.conversation || quotedMsg.extendedTextMessage?.text;
+                if (repliedText) prompt += `\n\n[Pesan yang di-reply: ${repliedText}]`;
+            }
+
+            const getMediaBuffer = async (type, messageData) => {
+                const stream = await downloadContentFromMessage(messageData, type.replace('Message', ''));
+                let buffer = Buffer.from([]);
+                for await (const chunk of stream) {
+                    buffer = Buffer.concat([buffer, chunk]);
+                }
+                return buffer;
+            };
+
+            if (['imageMessage', 'audioMessage', 'videoMessage'].includes(mediaType)) {
+                await sock.sendMessage(from, { react: { text: "👀", key: msg.key } });
+
+                if (mediaType === 'imageMessage') {
+                    const buffer = await getMediaBuffer('image', mediaMessage);
+                    base64Image = buffer.toString('base64');
+                }
+                
+                else if (mediaType === 'audioMessage' || mediaType === 'videoMessage') {
+                    try {
+                        const buffer = await getMediaBuffer(mediaType, mediaMessage);
+                        const ext = mediaType === 'videoMessage' ? 'mp4' : 'ogg';
+                        const tmpFile = path.join(os.tmpdir(), `noya_media_${Date.now()}.${ext}`);
+                        fs.writeFileSync(tmpFile, buffer);
+
+                        const transcription = await groq.audio.transcriptions.create({
+                            file: fs.createReadStream(tmpFile),
+                            model: 'whisper-large-v3'
+                        });
+
+                        fs.unlinkSync(tmpFile);
+
+                        if (transcription.text) {
+                            prompt += `\n\n[Transkripsi dari ${mediaType === 'videoMessage' ? 'Video' : 'Voice Note/Audio'}: "${transcription.text}"]`;
+                        }
+                    } catch (err) {
+                        prompt += `\n\n[Gagal mengenali suara dari media: ${err.message}]`;
+                    }
+                }
+            }
+
+            if (!prompt && !base64Image) {
+                return await sock.sendMessage(from, {
+                    text: `Halo ${userName}! Noya di sini! Sini ngobrol sama Noya UwU`
+                }, { quoted: msg });
+            }
 
             const { timeNow, dateNow } = _getWibTime();
             const ramTotal  = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
@@ -131,15 +185,26 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
                     `\n\nTUGAS RAHASIA: Jika ada fakta baru tentang user, awali balasan dengan tag [FAKTA: informasi].`
             };
 
-            const payload = [systemMsg, ...dbs.noyaHistoryDb[userUid], { role: 'user', content: prompt }];
+            let modelToUse = 'llama-4'; 
+            let userMessageContent = prompt || 'Apa yang kamu lihat di gambar ini?';
+
+            if (base64Image) {
+                modelToUse = 'meta-llama/llama-4-scout-17b-16e-instruct';
+                userMessageContent = [
+                    { type: 'text', text: userMessageContent },
+                    { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } }
+                ];
+            }
+
+            const payload = [systemMsg, ...dbs.noyaHistoryDb[userUid], { role: 'user', content: userMessageContent }];
+            
             const res = await groq.chat.completions.create({
                 messages: payload,
-                model:    'llama-3.3-70b-versatile'
+                model:    modelToUse
             });
 
             let noyaResp = res.choices[0]?.message?.content || 'Aduh Noya ngeblank nih...';
 
-            // Extract & save new facts
             const factMatch = noyaResp.match(/\[FAKTA:\s*(.*?)\]/i);
             if (factMatch) {
                 const newFact = factMatch[1].trim();
@@ -150,7 +215,8 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
                 noyaResp = noyaResp.replace(factMatch[0], '').trim();
             }
 
-            _pushHistory(dbs.noyaHistoryDb[userUid], prompt, noyaResp);
+            const historyPrompt = typeof userMessageContent === 'string' ? prompt : (prompt || '[Kirim Gambar]');
+            _pushHistory(dbs.noyaHistoryDb[userUid], historyPrompt, noyaResp);
             await saveDb('noyaHistoryDb');
 
             return await sock.sendMessage(from, { text: noyaResp }, { quoted: msg });
@@ -163,7 +229,6 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
     }
 };
 
-// ── Helpers ─────────────────────────────────────────
 function _pushHistory(arr, userMsg, botMsg) {
     arr.push({ role: 'user',      content: userMsg });
     arr.push({ role: 'assistant', content: botMsg  });

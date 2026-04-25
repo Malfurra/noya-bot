@@ -6,6 +6,9 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Session
+bot_session
+
 # Node Modules and Package-log.json
 package-lock.json
 

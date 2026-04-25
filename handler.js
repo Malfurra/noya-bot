@@ -10,6 +10,7 @@ const aiCmd = require('./commands/ai');
 const downloadCmd = require('./commands/download');
 const ecoCmd = require('./commands/economy');
 const { gameCmd, handleGameAnswer, handleWWNightAction } = require('./commands/games');
+
 const processedMessages = new Set();
 const GENERAL_CMDS = new Set(['tes','cekjam','menu','menugroup','menugame','menugeneral','menuowner','list','olist','ping','setname','profile','my','me','afk','welcome','setwelcome','delwelcome','gcs','saran','report', 'fakereply', 'freply','fr', 'enc', 'dec']);
 const DOWNLOAD_CMDS = new Set(['tt','ig','yt','twitter','limitig']);
@@ -31,7 +32,6 @@ module.exports = async function messageHandler(sock, m) {
         const msg = m.messages[0];
         if (!msg || !msg.message || !msg.key.id) return;
 
-       
         const msgId = msg.key.id;
         if (processedMessages.has(msgId)) return;
         processedMessages.add(msgId);
@@ -42,8 +42,6 @@ module.exports = async function messageHandler(sock, m) {
 
         const { authorizedUsers, ownerUsers, listDb, settingsDb, blockDb } = dbs;
         const prefix = settingsDb.prefix || '.';
-        
-
 
         let rawSenderJid = msg.key.participant || msg.participant || msg.key.remoteJid;
         if (msg.key.fromMe && sock.user?.id) rawSenderJid = cleanJid(sock.user.id);
@@ -59,7 +57,6 @@ module.exports = async function messageHandler(sock, m) {
 
         await ensureUser(dbs, saveDb, sender, msg.pushName);
 
-                 // === EKSTRAKSI TEKS & TOMBOL ===
         const messageText =
             msg.message.conversation ||
             msg.message.extendedTextMessage?.text ||
@@ -72,9 +69,7 @@ module.exports = async function messageHandler(sock, m) {
                 : '') || '';
         
         if (!messageText) return;
-        // ===============================
 
-        // KEMBALIKAN DUA BARIS INI YANG SEMPAT HILANG
         const fullText = messageText.trim();
         const senderNumber = sender.replace(/[^0-9]/g, '');
 
@@ -89,9 +84,7 @@ module.exports = async function messageHandler(sock, m) {
             return entryNum.length > 5 && senderNumber === entryNum;
         });
 
-        
         const isAuthorizedGroup = from.endsWith('@g.us') && authorizedUsers.includes(from);
-        
         const isAuthorized = isOwner || isAuthorizedUser || isAuthorizedGroup;
 
         if (!dbs.afkDb) dbs.afkDb = {};
@@ -125,26 +118,21 @@ module.exports = async function messageHandler(sock, m) {
         const isGameAnswer = await handleGameAnswer(sock, msg, fullText, sender, from, dbs);
         if (isGameAnswer) return;
 
-        
         if (!from.endsWith('@g.us')) {
             const isWWAction = await handleWWNightAction(sock, msg, fullText, sender, from, dbs);
             if (isWWAction) return;
         }
-       
         
         if (isOwner) {
             const quotedMsg = msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
             const quotedText = quotedMsg?.conversation || quotedMsg?.extendedTextMessage?.text || '';
             
             if (quotedText.includes('SARAN MASUK') || quotedText.includes('REPORT MASUK')) {
-                
                 let targetJid = quotedMsg?.extendedTextMessage?.contextInfo?.mentionedJid?.[0];
-                
                 
                 if (!targetJid) {
                     const match = quotedText.match(/Nomor\s*:\s*@([0-9]+)/);
                     if (match && match[1]) {
-                        
                         targetJid = match[1].length >= 15 ? match[1] + '@lid' : match[1] + '@s.whatsapp.net';
                     }
                 }
@@ -166,9 +154,6 @@ module.exports = async function messageHandler(sock, m) {
             }
         }
 
-
-        
-
         if (fullText.startsWith('getaudio|')) {
             return await downloadCmd(sock, msg, 'choice', [], from, fullText, '', isOwner);
         }
@@ -184,9 +169,8 @@ module.exports = async function messageHandler(sock, m) {
         }
 
         if (fullText.startsWith('>') || fullText.startsWith('=>') || fullText.startsWith('$')) {
-    return await execCmd(sock, msg, fullText, isOwner);
-}
-
+            return await execCmd(sock, msg, fullText, isOwner);
+        }
 
         if (!fullText.startsWith(prefix)) return;
         if (!isAuthorized) return;
@@ -195,12 +179,11 @@ module.exports = async function messageHandler(sock, m) {
         const command = textWithoutPrefix.split(' ')[0].toLowerCase();
         const args = textWithoutPrefix.split(' ').slice(1);
         
-  if (dbs.bannedCmdsDb && dbs.bannedCmdsDb[command] && !isOwner) {
+        if (dbs.bannedCmdsDb && dbs.bannedCmdsDb[command] && !isOwner) {
             return await sock.sendMessage(from, {
                 text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *MAINTENANCE* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PEMBERITAHUAN*\n┌─────────────────────\n│ ﹒🚫 Fitur *${command}* sedang dinonaktifkan.\n│ ﹒💬 Alasan : ${dbs.bannedCmdsDb[command]}\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`
             }, { quoted: msg });
         }
-
 
         if (command === 'qc') {
             return await qcCmd(sock, msg, dbs, sender, saveDb);
