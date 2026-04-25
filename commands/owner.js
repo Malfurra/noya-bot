@@ -53,10 +53,10 @@ if (command === 'ceksaluran') {
     }
 
     try {
-        // Ambil kode invite dari link (mengambil teks setelah 'channel/')
+      
         const inviteCode = link.split('channel/')[1];
         
-        // Tarik metadata saluran langsung menggunakan fungsi bawaan Baileys
+     
         const channelData = await sock.newsletterMetadata("invite", inviteCode);
         
         const channelId = channelData.id;
@@ -81,10 +81,10 @@ if (command === 'ceksaluran') {
 
     await sock.sendMessage(from, { text: 'Broadcast dimulai...' });
     
-    // Fungsi Spintax untuk variasi pesan (Contoh: {Halo|Hai|P})
+   
     const parseSpintax = (text) => {
     return text.replace(/\{([^}]+)\}/g, (match, p1) => {
-        // .map(v => v.trim()) berfungsi menghapus spasi yang gak sengaja ketik
+    
         const options = p1.split('|').map(v => v.trim()); 
         return options[Math.floor(Math.random() * options.length)];
     });
@@ -100,13 +100,12 @@ if (command === 'ceksaluran') {
             if (mem.id === botId) continue;
             
             try { 
-                // Generate teks baru untuk setiap target
                 const finalMessage = parseSpintax(bcText);
                 await sock.sendMessage(mem.id, { text: finalMessage }); 
                 count++; 
             } catch { }
             
-            // Jeda acak 5000ms (5d) sampai 10000ms (10d)
+         
             const randomDelay = Math.floor(Math.random() * (10000 - 5000 + 1)) + 5000;
             await new Promise(r => setTimeout(r, randomDelay));
         }
@@ -144,6 +143,19 @@ if (command === 'ceksaluran') {
             return await sock.sendMessage(from, { text: 'Gagal mengambil info grup.' }, { quoted: msg });
         }
     }
+    
+        if (command === 'kill') {
+        if (!isOwner) return;
+        await sock.sendMessage(from, { text: 'Mematikan bot...' }, { quoted: msg });
+        process.exit(0);
+    }
+
+    if (command === 'restart') {
+        if (!isOwner) return;
+        await sock.sendMessage(from, { text: 'Merestart bot...' }, { quoted: msg });
+        process.exit(1);
+    }
+
 
     if (command === 'addowner') {
         if (!isSuperOwner()) return await sock.sendMessage(from, { text: 'Lau sape mpruy?' }, { quoted: msg });

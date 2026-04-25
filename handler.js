@@ -21,7 +21,7 @@ const OWNER_CMDS = new Set([
     'setpagi','setmalam','delpagi','delmalam','setprefix','delopen','delclose',
     'kick','warn','promote','demote','open','close','setopen','setclose',
     'addblock','delblock','broadcast','getidgc','cekid','listowner','addowner','delowner',
-    'hidetag','h','ht'
+    'hidetag','h','ht','kill','restart'
 ]);
 
 module.exports = async function messageHandler(sock, m) {
