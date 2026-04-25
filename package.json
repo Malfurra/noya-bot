@@ -1,0 +1,23 @@
+{
+  "name": "noya-bot",
+  "version": "1.0.0",
+  "description": "Store bot Noya ID",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "btch-downloader": "latest",
+    "@google/generative-ai": "^0.24.1",
+    "@phrolovaa/baileys": "latest",
+    "axios": "^1.6.0",
+    "mongodb": "^7.1.1",
+    "mongoose": "^9.4.1",
+    "pino": "^8.16.0",
+    "wa-sticker-formatter": "^4.4.4",
+    "groq-sdk": "latest",
+    "dotenv": "^16.4.5",
+    "@hapi/boom": "^9.1.4"
+  }
+}
