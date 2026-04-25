@@ -185,7 +185,7 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
                     `\n\nTUGAS RAHASIA: Jika ada fakta baru tentang user, awali balasan dengan tag [FAKTA: informasi].`
             };
 
-            let modelToUse = 'llama-4'; 
+            let modelToUse = 'meta-llama/llama-4-scout-17b-16e-instruct'; 
             let userMessageContent = prompt || 'Apa yang kamu lihat di gambar ini?';
 
             if (base64Image) {
