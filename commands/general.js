@@ -481,4 +481,20 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
             text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *REPORT* 𝜗𝜚˚⋆    ║\n╚══════════════════════╝\n\n✿ *BERHASIL TERKIRIM!*\n┌─────────────────────\n│ ﹒✅ Laporanmu sudah diteruskan ke owner untuk diperiksa!\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·'
         }, { quoted: msg });
     }
+        if (command === 'enc') {
+        const textToEnc = args.join(' ');
+        if (!textToEnc) return await sock.sendMessage(from, { text: 'Masukkan teksnya!' }, { quoted: msg });
+
+        const hexResult = Buffer.from(textToEnc, 'utf-8').toString('hex');
+        return await sock.sendMessage(from, { text: hexResult }, { quoted: msg });
+    }
+
+    if (command === 'dec') {
+        const hexToDec = args.join(' ');
+        if (!hexToDec) return await sock.sendMessage(from, { text: 'Masukkan kode hexnya!' }, { quoted: msg });
+
+        const textResult = Buffer.from(hexToDec, 'hex').toString('utf-8');
+        return await sock.sendMessage(from, { text: textResult }, { quoted: msg });
+    }
+
 }
