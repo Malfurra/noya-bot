@@ -67,16 +67,17 @@ async function writeExif(media, packname, author) {
     exif.writeUIntLE(jsonBuff.length, 14, 4);
 
     const tmpFile = path.join(__dirname, `../temp/${crypto.randomBytes(6).readUIntLE(0, 6).toString(36)}.webp`);
-    fs.writeFileSync(tmpFile, media);
     
-    const img = new webpmux.Image();
-    await img.load(tmpFile);
-    img.exif = exif;
-    await img.save(tmpFile);
-    
-    const buffer = fs.readFileSync(tmpFile);
-    if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-    return buffer;
+    try {
+        fs.writeFileSync(tmpFile, media);
+        const img = new webpmux.Image();
+        await img.load(tmpFile);
+        img.exif = exif;
+        await img.save(tmpFile);
+        return fs.readFileSync(tmpFile);
+    } finally {
+        if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+    }
 }
 
 async function downloadMedia(message, type) {
@@ -115,6 +116,8 @@ module.exports = async function stickerCmd(sock, msg, command, args, from, prefi
     const tempDir = path.join(__dirname, '../temp');
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
 
+    let tempFiles = [];
+
     try {
         if (command === 's' || command === 'stiker' || command === 'swm' || command === 'stikerwm') {
             if (!isImage && !isVideo && !isQuotedImage && !isQuotedVideo && !isQuotedSticker) {
@@ -137,6 +140,7 @@ module.exports = async function stickerCmd(sock, msg, command, args, from, prefi
                 const inputPath = path.join(tempDir, `${Date.now()}.${type === 'image' ? 'jpg' : 'mp4'}`);
                 const outputPath = path.join(tempDir, `${Date.now()}.webp`);
                 
+                tempFiles.push(inputPath, outputPath);
                 fs.writeFileSync(inputPath, mediaBuffer);
 
                 if (type === 'image') {
@@ -146,8 +150,6 @@ module.exports = async function stickerCmd(sock, msg, command, args, from, prefi
                 }
 
                 stickerBuffer = fs.readFileSync(outputPath);
-                if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-                if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
             }
 
             if (command === 'swm' || command === 'stikerwm') {
@@ -181,6 +183,7 @@ module.exports = async function stickerCmd(sock, msg, command, args, from, prefi
             const isAnimated = mediaMessage.isAnimated || mediaBuffer.indexOf(Buffer.from('ANIM')) !== -1;
             
             const inputPath = path.join(tempDir, `${Date.now()}.webp`);
+            tempFiles.push(inputPath);
             fs.writeFileSync(inputPath, mediaBuffer);
 
             try {
@@ -204,26 +207,32 @@ module.exports = async function stickerCmd(sock, msg, command, args, from, prefi
                     await sock.sendMessage(from, { video: data }, { quoted: msg });
                 } catch (e) {
                     replyError('Gagal memproses konversi video animasi (Server Ezgif menolak permintaan).');
-                } finally {
-                    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
                 }
             } else {
                 const outputPath = path.join(tempDir, `${Date.now()}.jpg`);
+                tempFiles.push(outputPath);
+                
                 try {
-                    await execPromise(`ffmpeg -i ${inputPath} -vframes 1 ${outputPath}`);
-                    const imageBuffer = fs.readFileSync(outputPath);
-                    await sock.sendMessage(from, { image: imageBuffer }, { quoted: msg });
+                    await execPromise(`ffmpeg -vcodec libwebp -i ${inputPath} -vframes 1 ${outputPath}`);
                 } catch (e) {
-                    replyError('Gagal mengubah stiker statis menjadi gambar.');
-                } finally {
-                    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-                    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+                    await execPromise(`ffmpeg -i ${inputPath} -vframes 1 ${outputPath}`);
                 }
+                
+                const imageBuffer = fs.readFileSync(outputPath);
+                await sock.sendMessage(from, { image: imageBuffer }, { quoted: msg });
             }
         }
 
     } catch (err) {
         console.error(err);
         replyError('Terjadi kesalahan saat memproses media.');
+    } finally {
+        for (const file of tempFiles) {
+            if (fs.existsSync(file)) {
+                try {
+                    fs.unlinkSync(file);
+                } catch (e) {}
+            }
+        }
     }
 };
