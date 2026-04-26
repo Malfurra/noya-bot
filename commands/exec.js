@@ -37,7 +37,7 @@ module.exports = async function execCmd(sock, msg, fullText, isOwner) {
         const EDIT_DELAY = 2000;
 
         const sendUpdate = async (isFinal = false) => {
-            let textToSend = output.length > 3000 ? output.slice(-3000) : output;
+            let textToSend = output.length > 50000 ? output.slice(-50000) : output;
             
             textToSend = textToSend.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
