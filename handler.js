@@ -10,6 +10,7 @@ const aiCmd = require('./commands/ai');
 const downloadCmd = require('./commands/download');
 const ecoCmd = require('./commands/economy');
 const { gameCmd, handleGameAnswer, handleWWNightAction } = require('./commands/games');
+const stickerCmd = require('./commands/sticker');
 
 const processedMessages = new Set();
 const GENERAL_CMDS = new Set(['tes','cekjam','menu','menugroup','menugame','menugeneral','menuowner','list','olist','ping','setname','profile','my','me','afk','welcome','setwelcome','delwelcome','gcs','saran','report', 'fakereply', 'freply','fr', 'enc', 'dec']);
@@ -24,6 +25,7 @@ const OWNER_CMDS = new Set([
     'addblock','delblock','broadcast','getidgc','cekid','listowner','addowner','delowner',
     'hidetag','h','ht','kill','restart'
 ]);
+const STICKER_CMDS = new Set(['s', 'stiker', 'swm', 'stikerwm', 'toimg']);
 
 module.exports = async function messageHandler(sock, m) {
     try {
@@ -214,7 +216,11 @@ module.exports = async function messageHandler(sock, m) {
             return await ownerCmd(sock, msg, command, args, fullText, rawSenderJid, isOwner, prefix);
         }
 
+        if (STICKER_CMDS.has(command)) {
+            return await stickerCmd(sock, msg, command, args, from, prefix);
+        }
+
     } catch (err) {
-        console.error('[Handler Error]', err);
+        console.error(err);
     }
 };

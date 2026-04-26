@@ -8,16 +8,19 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "btch-downloader": "latest",
     "@google/generative-ai": "^0.24.1",
+    "@hapi/boom": "^9.1.4",
     "@phrolovaa/baileys": "latest",
-    "axios": "^1.6.0",
+    "axios": "^1.15.2",
+    "btch-downloader": "latest",
+    "cheerio": "^1.2.0",
+    "dotenv": "^16.4.5",
+    "form-data": "^4.0.5",
+    "groq-sdk": "latest",
     "mongodb": "^7.1.1",
     "mongoose": "^9.4.1",
+    "node-webpmux": "^3.2.1",
     "pino": "^8.16.0",
-    "wa-sticker-formatter": "^4.4.4",
-    "groq-sdk": "latest",
-    "dotenv": "^16.4.5",
-    "@hapi/boom": "^9.1.4"
+    "wa-sticker-formatter": "^4.4.4"
   }
 }
