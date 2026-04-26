@@ -1,5 +1,5 @@
 const util = require('util');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
@@ -29,43 +29,65 @@ module.exports = async function execCmd(sock, msg, fullText, isOwner) {
 
         const startTime = Date.now();
         let output = '';
-        let lastUpdate = Date.now();
+        
+        const child = spawn(cmd, { shell: true, cwd: currentDir });
 
-        const child = exec(cmd, { cwd: currentDir, maxBuffer: 1024 * 1024 * 10 });
+        let lastEditTime = 0;
+        let editTimeout = null;
+        const EDIT_DELAY = 2000;
 
-        const updateMessage = async (isFinal = false) => {
+        const sendUpdate = async (isFinal = false) => {
+            let textToSend = output.length > 3000 ? output.slice(-3000) : output;
+            
+            textToSend = textToSend.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+            if (!textToSend.trim()) {
+                textToSend = isFinal ? 'The command was executed successfully (no output)' : '⏳ Processing...';
+            }
+
+            let finalMsg = `\`\`\`${textToSend.trim()}\`\`\``;
+            if (isFinal) {
+                const execTime = Date.now() - startTime;
+                finalMsg += `\n\nExecuted in ${execTime} ms`;
+            }
+
+            try {
+                await sock.sendMessage(msg.key.remoteJid, { text: finalMsg, edit: msgKey });
+                lastEditTime = Date.now();
+            } catch (err) {}
+        };
+
+        const scheduleUpdate = (isFinal = false) => {
+            if (isFinal) {
+                if (editTimeout) clearTimeout(editTimeout);
+                sendUpdate(true);
+                return;
+            }
+
             const now = Date.now();
-            if (isFinal || now - lastUpdate > 1500) {
-                lastUpdate = now;
-                
-                let textToSend = output.length > 3000 ? output.slice(-3000) : output;
-                
-                if (!textToSend.trim()) {
-                    textToSend = isFinal ? 'The command was executed successfully (no output)' : '⏳ Processing...';
-                }
-
-                let finalMsg = `\`\`\`${textToSend.trim()}\`\`\``;
-                if (isFinal) {
-                    const execTime = Date.now() - startTime;
-                    finalMsg += `\n\nExecuted in ${execTime} ms`;
-                }
-
-                await sock.sendMessage(msg.key.remoteJid, { text: finalMsg, edit: msgKey }).catch(() => {});
+            if (now - lastEditTime >= EDIT_DELAY) {
+                if (editTimeout) clearTimeout(editTimeout);
+                sendUpdate();
+            } else if (!editTimeout) {
+                editTimeout = setTimeout(() => {
+                    sendUpdate();
+                    editTimeout = null;
+                }, EDIT_DELAY - (now - lastEditTime));
             }
         };
 
         child.stdout.on('data', (data) => {
-            output += data;
-            updateMessage();
+            output += data.toString();
+            scheduleUpdate();
         });
 
         child.stderr.on('data', (data) => {
-            output += data;
-            updateMessage();
+            output += data.toString();
+            scheduleUpdate();
         });
 
         child.on('close', () => {
-            updateMessage(true);
+            scheduleUpdate(true);
         });
         
         return;
