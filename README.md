@@ -1,6 +1,6 @@
 # 🤖 Noya Bot — WhatsApp Bot Documentation
 
-> **Untuk AI:** Baca seluruh dokumen ini sebelum memodifikasi kode. README ini adalah sumber kebenaran tunggal tentang arsitektur, alur data, konvensi, dan fitur bot. Jangan mengasumsikan sesuatu yang tidak tertulis di sini.
+> Baca seluruh dokumen ini sebelum memodifikasi kode. README ini adalah sumber kebenaran tunggal tentang arsitektur, alur data, konvensi, dan fitur bot. Jangan mengasumsikan sesuatu yang tidak tertulis di sini.
 
 ---
 
