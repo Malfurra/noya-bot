@@ -14,7 +14,7 @@ const stickerCmd = require('./commands/sticker');
 const BOT_FOOTER = global.botFooter || '🍁 _Powered by Noya Company_ 𖹭.ᐟ';
 
 const processedMessages = new Set();
-const GENERAL_CMDS = new Set(['tes','cekjam','menu','menugroup','menugame','menugeneral','menuowner','list','olist','ping','setname','profile','my','me','afk','welcome','setwelcome','delwelcome','gcs','saran','report', 'fakereply', 'freply','fr', 'enc', 'dec', 'prefix']);
+const GENERAL_CMDS = new Set(['tes','cekjam','menu','menugroup','menugame','menugeneral','menuowner','list','olist','ping','setname','profile','my','me','afk','welcome','setwelcome','delwelcome','gcs','saran','report','owner', 'fakereply', 'freply','fr', 'enc', 'dec', 'prefix']);
 const DOWNLOAD_CMDS = new Set(['tt','ig','yt','twitter','limitig']);
 const AI_CMDS = new Set(['gemini','noya','nano']);
 const GAME_CMDS = new Set(['tb','tebakbendera','ttt','tictactoe','stopgame','tttwr','math','nyerah','ww','werewolf','wwjoin','wwstart','wwvote','wwend','wwdawn','wwwr','werewolfwinrate']);
@@ -144,7 +144,7 @@ module.exports = async function messageHandler(sock, m) {
                     const replyText = fullText;
                     const typeInfo = quotedText.includes('SARAN') ? 'Saran' : 'Laporan';
                     
-                    const sendText = `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *BALASAN OWNER* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *Terkait ${typeInfo} Kamu:*\n┌─────────────────────\n│ ﹒💬 ${replyText}\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
+                    const sendText = `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *BALASAN OWNER* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *Terkait ${typeInfo} Kamu:*\n┌─────────────────────\n│ ﹒💬 ${replyText}\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}`;
                     
                     try {
                         await sock.sendMessage(targetJid, { text: sendText });
@@ -190,7 +190,7 @@ module.exports = async function messageHandler(sock, m) {
         
         if (dbs.bannedCmdsDb && dbs.bannedCmdsDb[command] && !isOwner) {
             return await sock.sendMessage(from, {
-                text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *MAINTENANCE* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PEMBERITAHUAN*\n┌─────────────────────\n│ ﹒🚫 Fitur *${command}* sedang dinonaktifkan.\n│ ﹒💬 Alasan : ${dbs.bannedCmdsDb[command]}\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`
+                text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *MAINTENANCE* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PEMBERITAHUAN*\n┌─────────────────────\n│ ﹒🚫 Fitur *${command}* sedang dinonaktifkan.\n│ ﹒💬 Alasan : ${dbs.bannedCmdsDb[command]}\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}`
             }, { quoted: msg });
         }
 

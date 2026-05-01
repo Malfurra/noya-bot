@@ -400,7 +400,7 @@ if (command === 'ceksaluran') {
         const input = fullText.substring(command.length + 1).trim();
         if (!input.includes('|')) {
             return await sock.sendMessage(from, {
-                text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *INFO FORMAT* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *CARA PENGGUNAAN*\n┌─────────────────────\n│ ﹒Ketik: *${prefix}bancmd cmd | alasan*\n│ ﹒Contoh: ${prefix}bancmd ping | Sedang perbaikan\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`
+                text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *INFO FORMAT* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *CARA PENGGUNAAN*\n┌─────────────────────\n│ ﹒Ketik: *${prefix}bancmd cmd | alasan*\n│ ﹒Contoh: ${prefix}bancmd ping | Sedang perbaikan\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}`
             }, { quoted: msg });
         }
 
@@ -413,7 +413,7 @@ if (command === 'ceksaluran') {
         await saveDb('bannedCmdsDb'); 
 
         return await sock.sendMessage(from, {
-            text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *COMMAND BANNED* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒🚫 Command : *${targetCmd}*\n│ ﹒💬 Alasan  : ${reason}\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`
+            text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *COMMAND BANNED* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒🚫 Command : *${targetCmd}*\n│ ﹒💬 Alasan  : ${reason}\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}`
         }, { quoted: msg });
     }
 

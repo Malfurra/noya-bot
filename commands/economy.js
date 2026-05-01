@@ -68,7 +68,7 @@ if (command === 'b' || command === 'balance') {
         const kasta = getCaste(userEco.balance);
         const teksWallet = 
 `╔══════════════════════╗
-║            ⋆. 𐙚˚࿔ *WALLET* 𝜗𝜚˚⋆                ║
+║ ⋆. 𐙚˚࿔ *WALLET* 𝜗𝜚˚⋆ ║
 ╚══════════════════════╝
 
 ✿ *ACCOUNT DETAILS*
@@ -78,8 +78,7 @@ if (command === 'b' || command === 'balance') {
 └─────────────────────
 
 · · ────────────── · ·
-> ${BOT_FOOTER}
-· · ────────────── · ·`;
+> ${BOT_FOOTER}`;
 
         return await sock.sendMessage(from, { 
             text: teksWallet.trim() 

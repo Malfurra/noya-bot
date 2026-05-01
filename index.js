@@ -3,7 +3,7 @@ const pino = require('pino');
 const fs = require('fs');
 const readline = require('readline'); 
 const { Boom } = require('@hapi/boom'); 
-
+const qrcode = require('qrcode-terminal');
 const { connectDb, dbs } = require('./database');
 const messageHandler = require('./handler'); 
 
@@ -23,12 +23,22 @@ async function startBot() {
 async function connectToWhatsApp() {
     const isRegistered = fs.existsSync('./bot_session/creds.json');
     let phoneNumber = '';
+    let usePairingCode = false;
 
     if (!isRegistered) {
         const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
         const question = (text) => new Promise((resolve) => rl.question(text, resolve));
-        const input = await question('Masukkan nomor WhatsApp Bot: ');
-        phoneNumber = input.replace(/[^0-9]/g, ''); 
+        
+        console.log('\nPilih Metode Koneksi:');
+        console.log('1. Pairing Code (Tanpa Scan)');
+        console.log('2. QR Code (Scan QR)');
+        const choice = await question('Masukkan pilihan (1/2): ');
+        
+        if (choice === '1') {
+            usePairingCode = true;
+            const input = await question('Masukkan nomor WhatsApp Bot (contoh: 628xxx): ');
+            phoneNumber = input.replace(/[^0-9]/g, ''); 
+        }
         rl.close();
     }
 
@@ -40,15 +50,17 @@ async function connectToWhatsApp() {
         auth: state,
         logger: pino({ level: 'silent' }),
         browser: ['Mac OS', 'Safari', '10.15.7'],
-        printQRInTerminal: false
+        printQRInTerminal: !usePairingCode && !isRegistered
     });
 
-    if (!isRegistered && phoneNumber) {
+    if (!isRegistered && usePairingCode && phoneNumber) {
         setTimeout(async () => {
             try {
                 const code = await sock.requestPairingCode(phoneNumber);
-                console.log(`KODE PAIRING ANDA: ${code}`);
-            } catch (err) {}
+                console.log(`\nKODE PAIRING ANDA: ${code}\n`);
+            } catch (err) {
+                console.error('Gagal mendapatkan pairing code:', err);
+            }
         }, 3000);
     }
 
@@ -88,7 +100,12 @@ async function connectToWhatsApp() {
 
 
     sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect } = update;
+        const { connection, lastDisconnect, qr } = update;
+        
+        if (qr && !usePairingCode) {
+            console.log('\n--- SCAN QR DI BAWAH INI ---');
+            qrcode.generate(qr, { small: true });
+        }
         
         if (connection === 'close') {
             const error = lastDisconnect?.error;

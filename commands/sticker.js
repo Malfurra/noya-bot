@@ -204,7 +204,7 @@ module.exports = async function stickerCmd(sock, msg, command, args, from, prefi
     const isVideo = msgType === 'videoMessage';
 
     const replyError = (text) => {
-        const errorText = `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *ERROR* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PEMBERITAHUAN*\n┌─────────────────────\n│ ﹒🚫 ${text}\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
+        const errorText = `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *ERROR* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PEMBERITAHUAN*\n┌─────────────────────\n│ ﹒🚫 ${text}\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}`;
         return sock.sendMessage(from, { text: errorText }, { quoted: msg });
     };
 

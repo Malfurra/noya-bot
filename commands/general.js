@@ -3,6 +3,7 @@ const { saveDb } = require('../database');
 const { resolveUser, ensureUser, getLevelFromXp, xpProgressInLevel, cleanJid } = require('../utils/helpers');
 const { generatePingImage } = require('../utils/pingImage');
 const BOT_FOOTER = global.botFooter || '🍁 _Powered by Noya Company_ 𖹭.ᐟ';
+const OWNER_AVATAR_SIZE = 1024;
 
 module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, prefix, args, sender) {
     const from = msg.key.remoteJid;
@@ -22,6 +23,92 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
 
     if (command === 'prefix') {
         return await sock.sendMessage(from, { text: `Prefix saat ini adalah : ${prefix}` }, { quoted: msg });
+    }
+
+    if (command === 'owner') {
+        const axios = require('axios');
+        const ownerJids = (global.ownerJid || []).filter(Boolean);
+        if (!ownerJids.length) {
+            return await sock.sendMessage(from, { text: 'Kontak owner belum diatur di setting.' }, { quoted: msg });
+        }
+
+        const fallbackAvatar = 'https://ui-avatars.com/api/?name=Owner&background=random&size=512';
+        let fallbackBuffer = null;
+        try {
+            const fbRes = await axios.get(fallbackAvatar, { responseType: 'arraybuffer', timeout: 5000 });
+            fallbackBuffer = Buffer.from(fbRes.data);
+        } catch (e) {
+            console.error('Error downloading fallback avatar');
+        }
+
+        const cards = [];
+        const contacts = [];
+
+        for (let i = 0; i < ownerJids.length; i++) {
+            const jid = ownerJids[i];
+            const number = jid.split('@')[0];
+            const ownerLabel = global.ownerDisplayNames?.[i] || (ownerJids.length > 1
+                ? `${global.ownerName || 'Owner Bot'} ${i + 1}`
+                : (global.ownerName || 'Owner Bot'));
+
+            let avatarUrl = fallbackAvatar;
+            try {
+                avatarUrl = await sock.profilePictureUrl(jid, 'image');
+            } catch (_) { }
+
+            let avatarBuffer = fallbackBuffer;
+            if (avatarUrl !== fallbackAvatar) {
+                try {
+                    const avatarRes = await axios.get(avatarUrl, { responseType: 'arraybuffer', timeout: 5000 });
+                    avatarBuffer = Buffer.from(avatarRes.data);
+                } catch (err) {
+                    console.error('Error downloading owner avatar:', err);
+                }
+            }
+
+            const vcard = 'BEGIN:VCARD\n'
+                + 'VERSION:3.0\n'
+                + `FN:${ownerLabel}\n`
+                + `ORG:Owner ${global.botName || 'Noya Bot'};\n`
+                + `TEL;type=CELL;type=VOICE;waid=${number}:+${number}\n`
+                + 'END:VCARD';
+
+            contacts.push({
+                vcard,
+                displayName: ownerLabel
+            });
+
+            cards.push({
+                image: avatarBuffer,
+                title: ownerLabel,
+                caption: `> 📍 *KONTAK OWNER* 📍\n\n﹒👤 Nama  : *${ownerLabel}*\n﹒📱 Nomor : *${number}*\n﹒🔗 Link  : https://wa.me/${number}\n\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ`,
+                footer: `Owner ${i + 1}/${ownerJids.length}`,
+                nativeFlow: [
+                    { text: 'Chat Owner', url: `https://wa.me/${number}` },
+                    { text: 'Copy Nomor', copy: number }
+                ]
+            });
+        }
+
+        if (cards.length >= 2) {
+            await sock.sendMessage(from, {
+                text: 'Geser kartu owner di bawah ini 👉',
+                footer: `> ${BOT_FOOTER}`,
+                cards
+            }, { quoted: msg });
+        } else {
+            await sock.sendMessage(from, {
+                image: cards[0].image,
+                caption: cards[0].caption
+            }, { quoted: msg });
+        }
+
+        return await sock.sendMessage(from, {
+            contacts: {
+                displayName: `${contacts.length} Kontak Owner`,
+                contacts
+            }
+        }, { quoted: msg });
     }
 
     if (command === 'ping') {
@@ -132,11 +219,11 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
         if (command === 'setwelcome') {
             const fs = require('fs');
             const { downloadMediaMessage } = require('@phrolovaa/baileys');
-            
+
             const contextInfo = msg.message?.extendedTextMessage?.contextInfo
                 || msg.message?.imageMessage?.contextInfo;
             const quotedMsg = contextInfo?.quotedMessage;
-            
+
             let mediaMsg = null;
             if (msg.message.imageMessage) {
                 mediaMsg = msg;
@@ -207,13 +294,13 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
             || msg.message?.audioMessage?.contextInfo;
 
         const quotedMsg = contextInfo?.quotedMessage;
-        
+
         // Extract caption or text from replied message
         let quotedText = quotedMsg?.conversation || quotedMsg?.extendedTextMessage?.text || quotedMsg?.imageMessage?.caption || quotedMsg?.videoMessage?.caption || '';
         if (quotedText.toLowerCase().startsWith(prefix + 'gcs')) {
             quotedText = quotedText.slice((prefix + 'gcs').length).trim();
         }
-        
+
         const textInput = args.length > 0 ? args.join(' ') : quotedText;
 
         try {
@@ -304,71 +391,71 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
         }
     }
 
-        if (['fakereply', 'freply', 'fr'].includes(command)) {
-    const textArgs = args.join(' ');
-    if (!textArgs) {
-        return await sock.sendMessage(from, { text: `Format salah!\nPenggunaan: ${prefix}${command} 628xxxx | pesan | balasan` }, { quoted: msg });
-    }
+    if (['fakereply', 'freply', 'fr'].includes(command)) {
+        const textArgs = args.join(' ');
+        if (!textArgs) {
+            return await sock.sendMessage(from, { text: `Format salah!\nPenggunaan: ${prefix}${command} 628xxxx | pesan | balasan` }, { quoted: msg });
+        }
 
-    let parts = textArgs.split('|');
-    if (parts.length < 3) {
-        return await sock.sendMessage(from, { text: `Format tidak lengkap!\nContoh: ${prefix}${command} 628xxxxx | pesan | balasan` }, { quoted: msg });
-    }
+        let parts = textArgs.split('|');
+        if (parts.length < 3) {
+            return await sock.sendMessage(from, { text: `Format tidak lengkap!\nContoh: ${prefix}${command} 628xxxxx | pesan | balasan` }, { quoted: msg });
+        }
 
-    const mentioned = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-    let manualMentions = [];
-    let regex = /@([0-9]{10,20})/g;
-    let match;
-    
-    while ((match = regex.exec(textArgs)) !== null) {
-        let extractedId = match[1];
-        manualMentions.push(extractedId + '@s.whatsapp.net');
-        manualMentions.push(extractedId + '@lid');
-    }
-    
-    let allMentions = [...new Set([...mentioned, ...manualMentions])];
+        const mentioned = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+        let manualMentions = [];
+        let regex = /@([0-9]{10,20})/g;
+        let match;
 
-    let nomorTarget = '';
-    let arg0 = parts[0].trim();
+        while ((match = regex.exec(textArgs)) !== null) {
+            let extractedId = match[1];
+            manualMentions.push(extractedId + '@s.whatsapp.net');
+            manualMentions.push(extractedId + '@lid');
+        }
 
-    if (arg0.startsWith('@') && allMentions.length > 0) {
-        let numTarget = arg0.replace(/[^0-9]/g, '');
-        nomorTarget = numTarget.length > 14 ? numTarget + '@lid' : numTarget + '@s.whatsapp.net';
-    } else {
-        let rawNum = arg0.replace(/[^0-9]/g, '');
-        nomorTarget = arg0.includes('@lid') ? rawNum + '@lid' : rawNum + '@s.whatsapp.net';
-    }
+        let allMentions = [...new Set([...mentioned, ...manualMentions])];
 
-    
-    let pesanPalsu = parts[1].trim();
-    pesanPalsu = pesanPalsu.replace(/@[0-9]{14,20}/g, '@User');
+        let nomorTarget = '';
+        let arg0 = parts[0].trim();
 
-    let pesanBalasan = parts[2].trim();
+        if (arg0.startsWith('@') && allMentions.length > 0) {
+            let numTarget = arg0.replace(/[^0-9]/g, '');
+            nomorTarget = numTarget.length > 14 ? numTarget + '@lid' : numTarget + '@s.whatsapp.net';
+        } else {
+            let rawNum = arg0.replace(/[^0-9]/g, '');
+            nomorTarget = arg0.includes('@lid') ? rawNum + '@lid' : rawNum + '@s.whatsapp.net';
+        }
 
-    const fakeQuoted = { 
-        key: { 
-            remoteJid: from,
-            fromMe: false, 
-            id: msg.key.id, 
-            participant: nomorTarget 
-        }, 
-        message: { 
-            extendedTextMessage: { 
-                text: pesanPalsu,
-                contextInfo: {
-                    mentionedJid: allMentions 
+
+        let pesanPalsu = parts[1].trim();
+        pesanPalsu = pesanPalsu.replace(/@[0-9]{14,20}/g, '@User');
+
+        let pesanBalasan = parts[2].trim();
+
+        const fakeQuoted = {
+            key: {
+                remoteJid: from,
+                fromMe: false,
+                id: msg.key.id,
+                participant: nomorTarget
+            },
+            message: {
+                extendedTextMessage: {
+                    text: pesanPalsu,
+                    contextInfo: {
+                        mentionedJid: allMentions
+                    }
                 }
-            } 
-        } 
-    };
+            }
+        };
 
-    return await sock.sendMessage(from, { 
-        text: pesanBalasan,
-        mentions: allMentions
-    }, { 
-        quoted: fakeQuoted 
-    });
-}
+        return await sock.sendMessage(from, {
+            text: pesanBalasan,
+            mentions: allMentions
+        }, {
+            quoted: fakeQuoted
+        });
+    }
 
 
 
@@ -381,7 +468,7 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
         const user = getUser(sender);
         const uName = user?.name || msg.pushName || 'User';
 
-        const headerText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *Noya AI* 𝜗𝜚˚⋆  ║ ˙ . ꒷ 🍰 . 𖦹˙\n╚══════════════════════╝\n\n◌ Halo, *${uName}!*\n◌ ${now} WIB\n◌ Prefix: *${prefix}*\n\n· · ────────────── · ·\n\nPilih kategori menu di bawah ini 🌸`;
+        const headerText = `╔══════════════════════╗\n║   *Noya AI*   ║ ˙ . ꒷ 🍰 . 𖦹˙\n╚══════════════════════╝\n\n◌ Halo, *${uName}!*\n◌ ${now} WIB\n◌ Prefix: *${prefix}*\n\n· · ────────────── · ·\n\nPilih kategori menu di bawah ini 🌸`;
 
         const { generateWAMessageFromContent, proto } = require('@phrolovaa/baileys');
 
@@ -437,23 +524,23 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
     }
 
     if (command === 'menugroup') {
-        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MENU GRUP* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *WELCOME & PESAN*\n┌─────────────────────\n│ ﹒${prefix}welcome _[on/off]_\n│ ﹒${prefix}setwelcome _[teks]_\n│ ﹒${prefix}delwelcome\n└─────────────────────\n\n✿ *MANAJEMEN GRUP*\n┌─────────────────────\n│ ﹒${prefix}open / ${prefix}close\n│ ﹒${prefix}setopen _[teks]_\n│ ﹒${prefix}setclose _[teks]_\n│ ﹒${prefix}delopen / ${prefix}delclose\n│ ﹒${prefix}kick @member\n│ ﹒${prefix}warn @member\n│ ﹒${prefix}promote @member\n│ ﹒${prefix}demote @member\n│ ﹒${prefix}hidetag _[teks]_\n│ ﹒${prefix}gcs\n└─────────────────────\n\n✿ *LIST*\n┌─────────────────────\n│ ﹒${prefix}list\n│ ﹒${prefix}olist\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
+        const menuText = `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *MENU GRUP* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *WELCOME & PESAN*\n┌─────────────────────\n│ ﹒${prefix}welcome _[on/off]_\n│ ﹒${prefix}setwelcome _[teks]_\n│ ﹒${prefix}delwelcome\n└─────────────────────\n\n✿ *MANAJEMEN GRUP*\n┌─────────────────────\n│ ﹒${prefix}open / ${prefix}close\n│ ﹒${prefix}setopen _[teks]_\n│ ﹒${prefix}setclose _[teks]_\n│ ﹒${prefix}delopen / ${prefix}delclose\n│ ﹒${prefix}kick @member\n│ ﹒${prefix}warn @member\n│ ﹒${prefix}promote @member\n│ ﹒${prefix}demote @member\n│ ﹒${prefix}hidetag _[teks]_\n│ ﹒${prefix}gcs\n└─────────────────────\n\n✿ *LIST*\n┌─────────────────────\n│ ﹒${prefix}list\n│ ﹒${prefix}olist\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}`;
         return await sock.sendMessage(from, { text: menuText.trim() }, { quoted: msg });
     }
 
     if (command === 'menugame') {
-        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MINI GAME* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *TEBAK-TEBAKAN*\n┌─────────────────────\n│ ﹒${prefix}tb / ${prefix}tebakbendera\n│ ﹒${prefix}math _[easy/medium/hard]_\n│ ﹒${prefix}nyerah  _(menyerah)_\n│ ﹒${prefix}stopgame  _(hentikan game)_\n└─────────────────────\n\n✿ *TICTACTOE*\n┌─────────────────────\n│ ﹒${prefix}ttt @lawan\n│ ﹒${prefix}tttwr  _(win rate)_\n└─────────────────────\n\n✿ *WEREWOLF* 🐺\n┌─────────────────────\n│ ﹒${prefix}ww _[5/7/9]_\n│ ﹒${prefix}wwjoin\n│ ﹒${prefix}wwstart\n│ ﹒${prefix}wwvote @pemain\n│ ﹒${prefix}wwend\n│ ﹒${prefix}wwdawn\n│ ﹒${prefix}wwwr  _(win rate)_\n└─────────────────────\n\n✿ *EKONOMI*\n┌─────────────────────\n│ ﹒${prefix}balance / ${prefix}b\n│ ﹒${prefix}daily\n│ ﹒${prefix}weekly\n│ ﹒${prefix}monthly\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
+        const menuText = `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *MINI GAME* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *TEBAK-TEBAKAN*\n┌─────────────────────\n│ ﹒${prefix}tb / ${prefix}tebakbendera\n│ ﹒${prefix}math _[easy/medium/hard]_\n│ ﹒${prefix}nyerah  _(menyerah)_\n│ ﹒${prefix}stopgame  _(hentikan game)_\n└─────────────────────\n\n✿ *TICTACTOE*\n┌─────────────────────\n│ ﹒${prefix}ttt @lawan\n│ ﹒${prefix}tttwr  _(win rate)_\n└─────────────────────\n\n✿ *WEREWOLF* 🐺\n┌─────────────────────\n│ ﹒${prefix}ww _[5/7/9]_\n│ ﹒${prefix}wwjoin\n│ ﹒${prefix}wwstart\n│ ﹒${prefix}wwvote @pemain\n│ ﹒${prefix}wwend\n│ ﹒${prefix}wwdawn\n│ ﹒${prefix}wwwr  _(win rate)_\n└─────────────────────\n\n✿ *EKONOMI*\n┌─────────────────────\n│ ﹒${prefix}balance / ${prefix}b\n│ ﹒${prefix}daily\n│ ﹒${prefix}weekly\n│ ﹒${prefix}monthly\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}`;
         return await sock.sendMessage(from, { text: menuText.trim() }, { quoted: msg });
     }
 
     if (command === 'menugeneral') {
-        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *GENERAL* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *DOWNLOADER*\n┌─────────────────────\n│ ﹒${prefix}tt _[url]_\n│ ﹒${prefix}ig _[url]_\n└─────────────────────\n\n✿ *AI & CHAT*\n┌─────────────────────\n│ ﹒${prefix}gemini _[tanya]_\n│ ﹒${prefix}noya _[ngobrol]_\n└─────────────────────\n\n✿ *PROFIL & AKUN*\n┌─────────────────────\n│ ﹒${prefix}profile / ${prefix}my / ${prefix}me\n│ ﹒${prefix}setname _[nama]_\n│ ﹒${prefix}afk _[alasan]_\n└─────────────────────\n\n✿ *UTILITAS*\n┌─────────────────────\n│ ﹒${prefix}ping\n│ ﹒${prefix}cekjam\n│ ﹒${prefix}tes\n│ ﹒${prefix}qc\n│ ﹒${prefix}fakereply\n└─────────────────────\n\n✿ *FEEDBACK*\n┌─────────────────────\n│ ﹒${prefix}saran _[pesanmu]_\n│ ﹒${prefix}report _[laporanmu]_\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
+        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *GENERAL* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *DOWNLOADER*\n┌─────────────────────\n│ ﹒${prefix}tt _[url]_\n│ ﹒${prefix}ig _[url]_\n└─────────────────────\n\n✿ *AI & CHAT*\n┌─────────────────────\n│ ﹒${prefix}gemini _[tanya]_\n│ ﹒${prefix}noya _[ngobrol]_\n└─────────────────────\n\n✿ *PROFIL & AKUN*\n┌─────────────────────\n│ ﹒${prefix}profile / ${prefix}my / ${prefix}me\n│ ﹒${prefix}setname _[nama]_\n│ ﹒${prefix}afk _[alasan]_\n└─────────────────────\n\n✿ *UTILITAS*\n┌─────────────────────\n│ ﹒${prefix}ping\n│ ﹒${prefix}cekjam\n│ ﹒${prefix}tes\n│ ﹒${prefix}qc\n│ ﹒${prefix}fakereply\n└─────────────────────\n\n✿ *FEEDBACK*\n┌─────────────────────\n│ ﹒${prefix}saran _[pesanmu]_\n│ ﹒${prefix}report _[laporanmu]_\n│ ﹒${prefix}owner\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}`;
         return await sock.sendMessage(from, { text: menuText.trim() }, { quoted: msg });
     }
 
     if (command === 'menuowner') {
         if (!isOwner) return;
-        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MENU OWNER* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✦ *MANAJEMEN BOT*\n┌─────────────────────\n│ ﹒${prefix}setprefix _[prefix]_\n│ ﹒${prefix}addowner @user\n│ ﹒${prefix}delowner @user\n│ ﹒${prefix}listowner\n│ ﹒${prefix}broadcast _[id | pesan]_\n│ ﹒${prefix}limitig _[angka]_\n│ ﹒${prefix}restart\n│ ﹒${prefix}kill\n│ ﹒> / => / $\n└─────────────────────\n\n✦ *LIST & RESPON*\n┌─────────────────────\n│ ﹒${prefix}addlist _[nama | isi]_\n│ ﹒${prefix}addolist _[nama | isi]_\n│ ﹒${prefix}updatelist _[nama | isi]_\n│ ﹒${prefix}delist _[nama]_\n│ ﹒${prefix}olist\n│ ﹒${prefix}addrespon _[gc/user]_\n│ ﹒${prefix}delrespon _[gc/user]_\n└─────────────────────\n\n✦ *GRUP & MODERASI*\n┌─────────────────────\n│ ﹒${prefix}listgroup\n│ ﹒${prefix}getidgc / ${prefix}cekid\n│ ﹒${prefix}bancmd _[command]_\n│ ﹒${prefix}unbancmd _[command]_\n└─────────────────────\n\n✦ *JADWAL OTOMATIS*\n┌─────────────────────\n│ ﹒${prefix}setpagi _[teks]_\n│ ﹒${prefix}setmalam _[teks]_\n│ ﹒${prefix}setopen _[teks]_\n│ ﹒${prefix}setclose _[teks]_\n│ ﹒${prefix}delopen / ${prefix}delclose\n└─────────────────────\n\n✦ *TOOLS*\n┌─────────────────────\n│ ﹒${prefix}ceksaluran _[link]_\n│ ﹒${prefix}getlid\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
+        const menuText = `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *MENU OWNER* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✦ *MANAJEMEN BOT*\n┌─────────────────────\n│ ﹒${prefix}setprefix _[prefix]_\n│ ﹒${prefix}addowner @user\n│ ﹒${prefix}delowner @user\n│ ﹒${prefix}listowner\n│ ﹒${prefix}broadcast _[id | pesan]_\n│ ﹒${prefix}limitig _[angka]_\n│ ﹒${prefix}restart\n│ ﹒${prefix}kill\n│ ﹒> / => / $\n└─────────────────────\n\n✦ *LIST & RESPON*\n┌─────────────────────\n│ ﹒${prefix}addlist _[nama | isi]_\n│ ﹒${prefix}addolist _[nama | isi]_\n│ ﹒${prefix}updatelist _[nama | isi]_\n│ ﹒${prefix}delist _[nama]_\n│ ﹒${prefix}olist\n│ ﹒${prefix}addrespon _[gc/user]_\n│ ﹒${prefix}delrespon _[gc/user]_\n└─────────────────────\n\n✦ *GRUP & MODERASI*\n┌─────────────────────\n│ ﹒${prefix}listgroup\n│ ﹒${prefix}getidgc / ${prefix}cekid\n│ ﹒${prefix}bancmd _[command]_\n│ ﹒${prefix}unbancmd _[command]_\n└─────────────────────\n\n✦ *JADWAL OTOMATIS*\n┌─────────────────────\n│ ﹒${prefix}setpagi _[teks]_\n│ ﹒${prefix}setmalam _[teks]_\n│ ﹒${prefix}setopen _[teks]_\n│ ﹒${prefix}setclose _[teks]_\n│ ﹒${prefix}delopen / ${prefix}delclose\n└─────────────────────\n\n✦ *TOOLS*\n┌─────────────────────\n│ ﹒${prefix}ceksaluran _[link]_\n│ ﹒${prefix}getlid\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}`;
         return await sock.sendMessage(from, { text: menuText.trim() }, { quoted: msg });
     }
 
@@ -484,7 +571,7 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
 
         if (!saranText) {
             return await sock.sendMessage(from, {
-                text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *SARAN* 𝜗𝜚˚⋆     ║\n╚══════════════════════╝\n\n✿ *CARA KIRIM SARAN*\n┌─────────────────────\n│ ﹒Ketik: *' + prefix + 'saran [pesanmu]*\n│ ﹒Contoh: ' + prefix + 'saran tambah fitur X\n└─────────────────────\n\n· · ────────────── · ·\n> _Saranmu akan diteruskan ke owner bot_ ✦'
+                text: '╔══════════════════════╗\n║  *SARAN*      ║\n╚══════════════════════╝\n\n✿ *CARA KIRIM SARAN*\n┌─────────────────────\n│ ﹒Ketik: *' + prefix + 'saran [pesanmu]*\n│ ﹒Contoh: ' + prefix + 'saran tambah fitur X\n└─────────────────────\n\n· · ────────────── · ·\n> _Saranmu akan diteruskan ke owner bot_ ✦'
             }, { quoted: msg });
         }
 
@@ -503,14 +590,14 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
         const groupInfo = isGroup ? `\n│ ﹒🏠 Grup   : ${groupName}` : '\n│ ﹒💬 Private Chat';
         const senderNumber = sender.split('@')[0];
 
-        const ownerMsg = '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *SARAN MASUK* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒👤 Dari   : ' + senderName + '\n│ ﹒📱 Nomor  : @' + senderNumber + groupInfo + '\n└─────────────────────\n\n✿ *ISI SARAN*\n┌─────────────────────\n│ ﹒💡 ' + saranText + '\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER + '\n· · ────────────── · ·';
+        const ownerMsg = '╔══════════════════════╗\n║  *SARAN MASUK*  ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒👤 Dari   : ' + senderName + '\n│ ﹒📱 Nomor  : @' + senderNumber + groupInfo + '\n└─────────────────────\n\n✿ *ISI SARAN*\n┌─────────────────────\n│ ﹒💡 ' + saranText + '\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER;
 
         try {
             await sock.sendMessage(ownerJid, { text: ownerMsg, mentions: [sender] });
-        } catch (e) {}
+        } catch (e) { }
 
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *SARAN* 𝜗𝜚˚⋆     ║\n╚══════════════════════╝\n\n✿ *BERHASIL TERKIRIM!*\n┌─────────────────────\n│ ﹒✅ Saranmu sudah diteruskan ke owner!\n│ ﹒💡 Terima kasih atas masukannya~\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER + '\n· · ────────────── · ·'
+            text: '╔══════════════════════╗\n║  *SARAN*      ║\n╚══════════════════════╝\n\n✿ *BERHASIL TERKIRIM!*\n┌─────────────────────\n│ ﹒✅ Saranmu sudah diteruskan ke owner!\n│ ﹒💡 Terima kasih atas masukannya~\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER
         }, { quoted: msg });
     }
 
@@ -521,7 +608,7 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
 
         if (!reportText) {
             return await sock.sendMessage(from, {
-                text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *REPORT* 𝜗𝜚˚⋆    ║\n╚══════════════════════╝\n\n✿ *CARA REPORT*\n┌─────────────────────\n│ ﹒Ketik: *' + prefix + 'report [laporanmu]*\n│ ﹒Contoh: ' + prefix + 'report bot tidak merespons\n└─────────────────────\n\n· · ────────────── · ·\n> _Laporanmu akan diteruskan ke owner bot_ ✦'
+                text: '╔══════════════════════╗\n║  *REPORT*     ║\n╚══════════════════════╝\n\n✿ *CARA REPORT*\n┌─────────────────────\n│ ﹒Ketik: *' + prefix + 'report [laporanmu]*\n│ ﹒Contoh: ' + prefix + 'report bot tidak merespons\n└─────────────────────\n\n· · ────────────── · ·\n> _Laporanmu akan diteruskan ke owner bot_ ✦'
             }, { quoted: msg });
         }
 
@@ -540,17 +627,17 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
         const groupInfo = isGroup ? `\n│ ﹒🏠 Grup   : ${groupName}` : '\n│ ﹒💬 Private Chat';
         const senderNumber = sender.split('@')[0];
 
-        const ownerMsg = '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *REPORT MASUK* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒👤 Dari   : ' + senderName + '\n│ ﹒📱 Nomor  : @' + senderNumber + groupInfo + '\n└─────────────────────\n\n✿ *ISI REPORT*\n┌─────────────────────\n│ ﹒⚠️ ' + reportText + '\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER + '\n· · ────────────── · ·';
+        const ownerMsg = '╔══════════════════════╗\n║  *REPORT MASUK*  ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒👤 Dari   : ' + senderName + '\n│ ﹒📱 Nomor  : @' + senderNumber + groupInfo + '\n└─────────────────────\n\n✿ *ISI REPORT*\n┌─────────────────────\n│ ﹒⚠️ ' + reportText + '\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER;
 
         try {
             await sock.sendMessage(ownerJid, { text: ownerMsg, mentions: [sender] });
-        } catch (e) {}
+        } catch (e) { }
 
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *REPORT* 𝜗𝜚˚⋆    ║\n╚══════════════════════╝\n\n✿ *BERHASIL TERKIRIM!*\n┌─────────────────────\n│ ﹒✅ Laporanmu sudah diteruskan ke owner untuk diperiksa!\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER + '\n· · ────────────── · ·'
+            text: '╔══════════════════════╗\n║  *REPORT*     ║\n╚══════════════════════╝\n\n✿ *BERHASIL TERKIRIM!*\n┌─────────────────────\n│ ﹒✅ Laporanmu sudah diteruskan ke owner untuk diperiksa!\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER
         }, { quoted: msg });
     }
-        if (command === 'enc') {
+    if (command === 'enc') {
         const textToEnc = args.join(' ');
         if (!textToEnc) return await sock.sendMessage(from, { text: 'Masukkan teksnya!' }, { quoted: msg });
 

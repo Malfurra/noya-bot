@@ -285,7 +285,7 @@ function generateMath(difficulty) {
 const TTT_SYMBOLS = { X: '✖️', O: '⭕' };
 const TTT_EMPTY   = '➖';
 const TTT_WINS    = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-const noyaFooter  = `\n· · ────────────── · ·\n> ${global.botFooter || '🍁 _Powered by Noya Company_ 𖹭.ᐟ'}\n· · ────────────── · ·`;
+const noyaFooter  = `\n· · ────────────── · ·\n> ${global.botFooter || '🍁 _Powered by Noya Company_ 𖹭.ᐟ'}`;
 
 function renderBoard(board) {
     const b = board.map(c => c ? TTT_SYMBOLS[c] : TTT_EMPTY);
@@ -317,7 +317,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
         const total = stats.wins + stats.losses + stats.draws;
         const wr    = total > 0 ? ((stats.wins / total) * 100).toFixed(1) : 0;
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *TTT STATS* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n✿ *PLAYER INFO*\n┌─────────────────────\n│ ﹒👤 Name   : @'+sender.split('@')[0]+'\n│ ﹒🏆 Menang : '+stats.wins+' Match\n│ ﹒💀 Kalah  : '+stats.losses+' Match\n│ ﹒🤝 Seri   : '+stats.draws+' Match\n│ ﹒📈 W R    : *'+wr+'%*\n└─────────────────────'+noyaFooter,
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *TTT STATS* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PLAYER INFO*\n┌─────────────────────\n│ ﹒👤 Name   : @'+sender.split('@')[0]+'\n│ ﹒🏆 Menang : '+stats.wins+' Match\n│ ﹒💀 Kalah  : '+stats.losses+' Match\n│ ﹒🤝 Seri   : '+stats.draws+' Match\n│ ﹒📈 W R    : *'+wr+'%*\n└─────────────────────'+noyaFooter,
             mentions: [sender]
         }, { quoted: msg });
     }
@@ -336,7 +336,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
             if (dbs.gameDb[from]?.type === 'flag' && dbs.gameDb[from]?.expiresAt === expiresAt) {
                 const correct = dbs.gameDb[from].answers[0];
                 delete dbs.gameDb[from]; await saveDb('gameDb');
-                await sock.sendMessage(from, { text: '╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *TIME OUT* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n⏰ Waktu habis!\n\nJawaban: 🚩 *'+correct.toUpperCase()+'*'+noyaFooter });
+                await sock.sendMessage(from, { text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *TIME OUT* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n⏰ Waktu habis!\n\nJawaban: 🚩 *'+correct.toUpperCase()+'*'+noyaFooter });
             }
         }, FLAG_TIMEOUT_MS);
         return await sock.sendMessage(from, {
@@ -403,12 +403,12 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
             if (dbs.gameDb[from]?.type === 'math' && dbs.gameDb[from]?.expiresAt === expiresAt) {
                 const correct = dbs.gameDb[from].answer;
                 delete dbs.gameDb[from]; await saveDb('gameDb');
-                await sock.sendMessage(from, { text: '╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *TIME OUT* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n⏰ Waktu habis!\n\nJawaban: *'+correct+'*'+noyaFooter });
+                await sock.sendMessage(from, { text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *TIME OUT* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n⏰ Waktu habis!\n\nJawaban: *'+correct+'*'+noyaFooter });
             }
         }, cfg.timeout * 1000);
         
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *MATH QUIZ* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n✿ *SOAL*\n┌─────────────────────\n│ ﹒'+cfg.emoji+' Level  : *'+cfg.label+'*\n│ ﹒❓ Soal   : *'+question+' = ?*\n│ \n│ ﹒⏱️ Waktu  : *'+cfg.timeout+' detik*\n│ ﹒🎁 Reward : *+'+cfg.xp+' XP | +Rp'+cfg.reward.toLocaleString('id-ID')+'*\n└─────────────────────\n\n· · ────────────── · ·\n> _Ketik jawabanmu!_ ✦'
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *MATH QUIZ* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *SOAL*\n┌─────────────────────\n│ ﹒'+cfg.emoji+' Level  : *'+cfg.label+'*\n│ ﹒❓ Soal   : *'+question+' = ?*\n│ \n│ ﹒⏱️ Waktu  : *'+cfg.timeout+' detik*\n│ ﹒🎁 Reward : *+'+cfg.xp+' XP | +Rp'+cfg.reward.toLocaleString('id-ID')+'*\n└─────────────────────\n\n· · ────────────── · ·\n> _Ketik jawabanmu!_ ✦'
         });
     }
 
@@ -436,7 +436,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
             dbs.ecoDb[winner].balance += WIN_REWARD_TTT;
             await saveDb('ecoDb');
             return await sock.sendMessage(from, {
-                text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *GIVE UP!* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *RESULT*\n┌─────────────────────\n│ ﹒🏳️ @'+loser.split('@')[0]+' menyerah!\n│ ﹒🏆 @'+winner.split('@')[0]+' menang!\n│ \n│ ﹒🎁 Reward:\n│ ﹒+ 30 XP\n│ ﹒+ Rp'+WIN_REWARD_TTT.toLocaleString('id-ID')+levelStr+'\n└─────────────────────'+noyaFooter,
+                text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *GIVE UP!* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *RESULT*\n┌─────────────────────\n│ ﹒🏳️ @'+loser.split('@')[0]+' menyerah!\n│ ﹒🏆 @'+winner.split('@')[0]+' menang!\n│ \n│ ﹒🎁 Reward:\n│ ﹒+ 30 XP\n│ ﹒+ Rp'+WIN_REWARD_TTT.toLocaleString('id-ID')+levelStr+'\n└─────────────────────'+noyaFooter,
                 mentions: [loser, winner]
             }, { quoted: msg });
         }
@@ -446,7 +446,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
             const label   = game.type === 'flag' ? '🚩 Bendera' : '🔢 Jawaban';
             delete dbs.gameDb[from]; await saveDb('gameDb');
             return await sock.sendMessage(from, {
-                text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *GIVE UP!* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n🏳️ @'+sender.split('@')[0]+' menyerah!\n\n'+label+': *'+String(correct).toUpperCase()+'*'+noyaFooter,
+                text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *GIVE UP!* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n🏳️ @'+sender.split('@')[0]+' menyerah!\n\n'+label+': *'+String(correct).toUpperCase()+'*'+noyaFooter,
                 mentions: [sender]
             }, { quoted: msg });
         }
@@ -475,7 +475,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
         const totalWins = (stats.winsWerewolf || 0) + (stats.winsVillager || 0);
         const wr = total > 0 ? ((totalWins / total) * 100).toFixed(1) : 0;
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *WW STATS* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *PLAYER INFO*\n┌─────────────────────\n│ ﹒👤 Name      : @' + sender.split('@')[0] + '\n│ ﹒🐺 Menang WW : ' + (stats.winsWerewolf || 0) + ' Match\n│ ﹒🏘️ Menang WG : ' + (stats.winsVillager || 0) + ' Match\n│ ﹒💀 Kalah     : ' + (stats.losses || 0) + ' Match\n│ ﹒🎮 Total     : ' + total + ' Match\n│ ﹒📈 W R       : *' + wr + '%*\n└─────────────────────' + noyaFooter,
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WW STATS* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PLAYER INFO*\n┌─────────────────────\n│ ﹒👤 Name      : @' + sender.split('@')[0] + '\n│ ﹒🐺 Menang WW : ' + (stats.winsWerewolf || 0) + ' Match\n│ ﹒🏘️ Menang WG : ' + (stats.winsVillager || 0) + ' Match\n│ ﹒💀 Kalah     : ' + (stats.losses || 0) + ' Match\n│ ﹒🎮 Total     : ' + total + ' Match\n│ ﹒📈 W R       : *' + wr + '%*\n└─────────────────────' + noyaFooter,
             mentions: [sender]
         }, { quoted: msg });
     }
@@ -489,7 +489,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
             if (ww.phase === 'lobby') {
                 const playerList = ww.players.map((p, i) => '│ ﹒' + (i + 1) + '. @' + p.split('@')[0]).join('\n');
                 return await sock.sendMessage(from, {
-                    text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *LOBBY*\n┌─────────────────────\n' + playerList + '\n└─────────────────────\n\n│ ﹒👥 Pemain  : *' + ww.players.length + '/' + ww.maxPlayers + '*\n│ ﹒⏳ Ketik *' + prefix + 'wwjoin* untuk bergabung\n│ ﹒🚀 Ketik *' + prefix + 'wwstart* untuk mulai\n└─────────────────────' + noyaFooter,
+                    text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *LOBBY*\n┌─────────────────────\n' + playerList + '\n└─────────────────────\n\n│ ﹒👥 Pemain  : *' + ww.players.length + '/' + ww.maxPlayers + '*\n│ ﹒⏳ Ketik *' + prefix + 'wwjoin* untuk bergabung\n│ ﹒🚀 Ketik *' + prefix + 'wwstart* untuk mulai\n└─────────────────────' + noyaFooter,
                     mentions: ww.players
                 }, { quoted: msg });
             }
@@ -500,7 +500,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
         const validSizes = [5, 7, 9];
         if (!validSizes.includes(inputMax)) {
             return await sock.sendMessage(from, {
-                text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *CARA MAIN*\n┌─────────────────────\n│ ﹒' + prefix + 'ww 5  → 5 pemain\n│ ﹒' + prefix + 'ww 7  → 7 pemain\n│ ﹒' + prefix + 'ww 9  → 9 pemain\n└─────────────────────\n\n> _Setelah room dibuat, pemain lain ketik_ *' + prefix + 'wwjoin* ✦'
+                text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *CARA MAIN*\n┌─────────────────────\n│ ﹒' + prefix + 'ww 5  → 5 pemain\n│ ﹒' + prefix + 'ww 7  → 7 pemain\n│ ﹒' + prefix + 'ww 9  → 9 pemain\n└─────────────────────\n\n> _Setelah room dibuat, pemain lain ketik_ *' + prefix + 'wwjoin* ✦'
             }, { quoted: msg });
         }
 
@@ -515,7 +515,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
         await saveDb('gameDb');
 
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *ROOM DIBUAT!*\n┌─────────────────────\n│ ﹒🎮 Host    : @' + sender.split('@')[0] + '\n│ ﹒👥 Kapasitas: *' + inputMax + ' pemain*\n│ ﹒✅ Joined  : *1/' + inputMax + '*\n└─────────────────────\n\n> _Ketik_ *' + prefix + 'wwjoin* _untuk bergabung!_\n> _Host ketik_ *' + prefix + 'wwstart* _untuk mulai!_ ✦' + noyaFooter,
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *ROOM DIBUAT!*\n┌─────────────────────\n│ ﹒🎮 Host    : @' + sender.split('@')[0] + '\n│ ﹒👥 Kapasitas: *' + inputMax + ' pemain*\n│ ﹒✅ Joined  : *1/' + inputMax + '*\n└─────────────────────\n\n> _Ketik_ *' + prefix + 'wwjoin* _untuk bergabung!_\n> _Host ketik_ *' + prefix + 'wwstart* _untuk mulai!_ ✦' + noyaFooter,
             mentions: [sender]
         }, { quoted: msg });
     }
@@ -539,7 +539,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
 
         const playerList = ww.players.map((p, i) => '│ ﹒' + (i + 1) + '. @' + p.split('@')[0]).join('\n');
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *PLAYER JOINED!*\n┌─────────────────────\n' + playerList + '\n└─────────────────────\n\n│ ﹒👥 *' + ww.players.length + '/' + ww.maxPlayers + '* pemain bergabung\n└─────────────────────' + noyaFooter,
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PLAYER JOINED!*\n┌─────────────────────\n' + playerList + '\n└─────────────────────\n\n│ ﹒👥 *' + ww.players.length + '/' + ww.maxPlayers + '* pemain bergabung\n└─────────────────────' + noyaFooter,
             mentions: ww.players
         }, { quoted: msg });
     }
@@ -621,14 +621,14 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
             }
             try {
                 await sock.sendMessage(player, {
-                    text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *PERANMU*\n┌─────────────────────\n│ ﹒' + roleEmoji[role] + ' Role   : *' + roleName[role] + '*' + extraInfo + '\n│ ﹒📖 Info   : ' + roleDesc[role] + '\n└─────────────────────' + noyaFooter
+                    text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PERANMU*\n┌─────────────────────\n│ ﹒' + roleEmoji[role] + ' Role   : *' + roleName[role] + '*' + extraInfo + '\n│ ﹒📖 Info   : ' + roleDesc[role] + '\n└─────────────────────' + noyaFooter
                 });
             } catch (e) { /* DM might fail if blocked */ }
         }
 
         const playerList = ww.players.map((p, i) => '│ ﹒' + (i + 1) + '. @' + p.split('@')[0]).join('\n');
         await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *GAME DIMULAI!*\n┌─────────────────────\n' + playerList + '\n└─────────────────────\n\n│ ﹒📩 Peran sudah dikirim ke DM masing-masing!\n│ ﹒⚠️ Jangan bocorkan peranmu!\n└─────────────────────\n\n╔══════════════════════╗\n║  ☀️ *SIANG - RONDE 1*  ║\n╚══════════════════════╝\n\n✿ *DISKUSI*\n┌─────────────────────\n│ ﹒Diskusikan siapa Werewolf-nya!\n│ ﹒Gunakan *' + prefix + 'wwvote @pemain* untuk voting.\n│ ﹒Pemain dengan vote terbanyak akan dieksekusi.\n│ ﹒Ketik *' + prefix + 'wwend* untuk akhiri siang & mulai malam.\n└─────────────────────' + noyaFooter,
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *GAME DIMULAI!*\n┌─────────────────────\n' + playerList + '\n└─────────────────────\n\n│ ﹒📩 Peran sudah dikirim ke DM masing-masing!\n│ ﹒⚠️ Jangan bocorkan peranmu!\n└─────────────────────\n\n╔══════════════════════╗\n║ ☀️ *SIANG - RONDE 1*  ║\n╚══════════════════════╝\n\n✿ *DISKUSI*\n┌─────────────────────\n│ ﹒Diskusikan siapa Werewolf-nya!\n│ ﹒Gunakan *' + prefix + 'wwvote @pemain* untuk voting.\n│ ﹒Pemain dengan vote terbanyak akan dieksekusi.\n│ ﹒Ketik *' + prefix + 'wwend* untuk akhiri siang & mulai malam.\n└─────────────────────' + noyaFooter,
             mentions: ww.players
         }, { quoted: msg });
         return;
@@ -662,7 +662,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
         const voteBoard = Object.entries(voteCounts).sort((a, b) => b[1] - a[1]).map(([p, c]) => '│ ﹒@' + p.split('@')[0] + ' : ' + c + ' vote').join('\n');
 
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *VOTE TERCATAT*\n┌─────────────────────\n│ ﹒✅ @' + sender.split('@')[0] + ' vote ke @' + target.split('@')[0] + '\n└─────────────────────\n\n✿ *VOTE BOARD*\n┌─────────────────────\n' + voteBoard + '\n└─────────────────────' + noyaFooter,
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *VOTE TERCATAT*\n┌─────────────────────\n│ ﹒✅ @' + sender.split('@')[0] + ' vote ke @' + target.split('@')[0] + '\n└─────────────────────\n\n✿ *VOTE BOARD*\n┌─────────────────────\n' + voteBoard + '\n└─────────────────────' + noyaFooter,
             mentions: [sender, target]
         }, { quoted: msg });
     }
@@ -721,7 +721,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
 
             const aliveList = ww.alivePlayers.map((p, i) => '│ ﹒' + (i + 1) + '. @' + p.split('@')[0]).join('\n');
             await sock.sendMessage(from, {
-                text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n' + eliminatedMsg + '\n\n╔══════════════════════╗\n║  🌙 *MALAM TIBA...*   ║\n╚══════════════════════╝\n\n✿ *PEMAIN HIDUP*\n┌─────────────────────\n' + aliveList + '\n└─────────────────────\n\n│ ﹒🐺 *Werewolf* → DM bot: *kill @target*\n│ ﹒🔮 *Seer* → DM bot: *check @target*\n│ ﹒💊 *Doctor* → DM bot: *save @target*\n│ ﹒🛡️ *Bodyguard* → DM bot: *guard @target*\n│ ﹒Host ketik *' + prefix + 'wwdawn* untuk pagi hari\n└─────────────────────' + noyaFooter,
+                text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n' + eliminatedMsg + '\n\n╔══════════════════════╗\n║  🌙 *MALAM TIBA...*   ║\n╚══════════════════════╝\n\n✿ *PEMAIN HIDUP*\n┌─────────────────────\n' + aliveList + '\n└─────────────────────\n\n│ ﹒🐺 *Werewolf* → DM bot: *kill @target*\n│ ﹒🔮 *Seer* → DM bot: *check @target*\n│ ﹒💊 *Doctor* → DM bot: *save @target*\n│ ﹒🛡️ *Bodyguard* → DM bot: *guard @target*\n│ ﹒Host ketik *' + prefix + 'wwdawn* untuk pagi hari\n└─────────────────────' + noyaFooter,
                 mentions: ww.alivePlayers
             }, { quoted: msg });
             return;
@@ -777,7 +777,7 @@ const gameCmd = async function(sock, msg, command, args, dbs, sender, prefix) {
 
         const aliveList = ww.alivePlayers.map((p, i) => '│ ﹒' + (i + 1) + '. @' + p.split('@')[0]).join('\n');
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n' + killMsg + '\n\n╔══════════════════════╗\n║  ☀️ *SIANG - RONDE ' + ww.round + '*  ║\n╚══════════════════════╝\n\n✿ *PEMAIN HIDUP*\n┌─────────────────────\n' + aliveList + '\n└─────────────────────\n\n│ ﹒Diskusi siapa Werewolf-nya!\n│ ﹒*' + prefix + 'wwvote @pemain* untuk voting\n│ ﹒*' + prefix + 'wwend* untuk eksekusi & lanjut malam\n└─────────────────────' + noyaFooter,
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n' + killMsg + '\n\n╔══════════════════════╗\n║  ☀️ *SIANG - RONDE ' + ww.round + '*  ║\n╚══════════════════════╝\n\n✿ *PEMAIN HIDUP*\n┌─────────────────────\n' + aliveList + '\n└─────────────────────\n\n│ ﹒Diskusi siapa Werewolf-nya!\n│ ﹒*' + prefix + 'wwvote @pemain* untuk voting\n│ ﹒*' + prefix + 'wwend* untuk eksekusi & lanjut malam\n└─────────────────────' + noyaFooter,
             mentions: ww.alivePlayers
         }, { quoted: msg });
     }
@@ -803,7 +803,7 @@ const handleGameAnswer = async function(sock, msg, text, sender, from, dbs) {
         dbs.ecoDb[sender].balance += WIN_REWARD_TB;
         await saveDb('ecoDb');
         await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *PERFECT!* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *RESULT*\n┌─────────────────────\n│ ﹒✅ Jawaban: *'+correct.toUpperCase()+'*\n│ ﹒🏆 Dijawab oleh: @'+sender.split('@')[0]+'\n│ \n│ ﹒🎁 Reward:\n│ ﹒+ 20 XP\n│ ﹒+ Rp'+WIN_REWARD_TB.toLocaleString('id-ID')+levelStr+'\n└─────────────────────'+noyaFooter,
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *PERFECT!* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *RESULT*\n┌─────────────────────\n│ ﹒✅ Jawaban: *'+correct.toUpperCase()+'*\n│ ﹒🏆 Dijawab oleh: @'+sender.split('@')[0]+'\n│ \n│ ﹒🎁 Reward:\n│ ﹒+ 20 XP\n│ ﹒+ Rp'+WIN_REWARD_TB.toLocaleString('id-ID')+levelStr+'\n└─────────────────────'+noyaFooter,
             mentions: [sender]
         }, { quoted: msg });
         return true;
@@ -823,7 +823,7 @@ const handleGameAnswer = async function(sock, msg, text, sender, from, dbs) {
         dbs.ecoDb[sender].balance += cfg.reward;
         await saveDb('ecoDb');
         await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *CORRECT!* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *RESULT*\n┌─────────────────────\n│ ﹒✅ Soal    : *'+game.question+' = '+game.answer+'*\n│ ﹒🏆 Dijawab : @'+sender.split('@')[0]+'\n│ \n│ ﹒🎁 Reward:\n│ ﹒+ '+cfg.xp+' XP\n│ ﹒+ Rp'+cfg.reward.toLocaleString('id-ID')+levelStr+'\n└─────────────────────'+noyaFooter,
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *CORRECT!* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *RESULT*\n┌─────────────────────\n│ ﹒✅ Soal    : *'+game.question+' = '+game.answer+'*\n│ ﹒🏆 Dijawab : @'+sender.split('@')[0]+'\n│ \n│ ﹒🎁 Reward:\n│ ﹒+ '+cfg.xp+' XP\n│ ﹒+ Rp'+cfg.reward.toLocaleString('id-ID')+levelStr+'\n└─────────────────────'+noyaFooter,
             mentions: [sender]
         }, { quoted: msg });
         return true;
@@ -948,7 +948,7 @@ async function _handleWWWin(sock, msg, from, ww, winner, dbs, saveDb, noyaFooter
     const winnerDesc  = winner === 'werewolf' ? 'Para Werewolf berhasil menguasai desa!' : 'Semua Werewolf berhasil ditemukan dan diusir!';
 
     return await sock.sendMessage(from, {
-        text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n╔══════════════════════╗\n║  🏆 *GAME OVER!*      ║\n╚══════════════════════╝\n\n✿ *PEMENANG*\n┌─────────────────────\n│ ﹒' + winnerLabel + '\n│ ﹒' + winnerDesc + '\n└─────────────────────\n\n✿ *SEMUA PERAN*\n┌─────────────────────\n' + allRoles + '\n└─────────────────────' + noyaFooter,
+        text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n╔══════════════════════╗\n║  🏆 *GAME OVER!*      ║\n╚══════════════════════╝\n\n✿ *PEMENANG*\n┌─────────────────────\n│ ﹒' + winnerLabel + '\n│ ﹒' + winnerDesc + '\n└─────────────────────\n\n✿ *SEMUA PERAN*\n┌─────────────────────\n' + allRoles + '\n└─────────────────────' + noyaFooter,
         mentions: ww.players
     }, { quoted: msg });
 }
@@ -1015,7 +1015,7 @@ const handleWWNightAction = async function(sock, msg, text, sender, from, dbs) {
 
     const actionLabel = { kill: '🗡️ Membunuh', check: '🔮 Memeriksa', save: '💊 Melindungi', guard: '🛡️ Menjaga' };
     await sock.sendMessage(from, {
-        text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *AKSI TERCATAT*\n┌─────────────────────\n│ ﹒' + actionLabel[action] + ' @' + target.split('@')[0] + '\n│ ﹒✅ Aksimu sudah tersimpan!\n└─────────────────────'
+        text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *AKSI TERCATAT*\n┌─────────────────────\n│ ﹒' + actionLabel[action] + ' @' + target.split('@')[0] + '\n│ ﹒✅ Aksimu sudah tersimpan!\n└─────────────────────'
     });
 
     // Special: Seer gets result immediately
@@ -1023,7 +1023,7 @@ const handleWWNightAction = async function(sock, msg, text, sender, from, dbs) {
         const targetRole = ww.playerRoles[target];
         const isWW = targetRole === 'werewolf';
         await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *HASIL PENGLIHATAN*\n┌─────────────────────\n│ ﹒🔮 @' + target.split('@')[0] + ' adalah...\n│ ﹒' + (isWW ? '🐺 *WEREWOLF!* Dia berbahaya!' : '🕊️ *BUKAN WEREWOLF*') + '\n└─────────────────────'
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *WEREWOLF* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *HASIL PENGLIHATAN*\n┌─────────────────────\n│ ﹒🔮 @' + target.split('@')[0] + ' adalah...\n│ ﹒' + (isWW ? '🐺 *WEREWOLF!* Dia berbahaya!' : '🕊️ *BUKAN WEREWOLF*') + '\n└─────────────────────'
         });
     }
 

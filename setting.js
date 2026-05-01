@@ -6,6 +6,7 @@ global.ownerName = 'Noya Owner';
 
 // Owner list (numeric + JID format)
 global.owner = ['628989262387', '6281379143305'];
+global.ownerDisplayNames = ['Muh Yasin', 'Nopal'];
 global.ownerJid = global.owner.map((num) => `${num}@s.whatsapp.net`);
 
 // Sticker/package metadata
