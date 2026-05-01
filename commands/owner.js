@@ -1,6 +1,7 @@
 const fs = require('fs');
 const { dbs, saveDb } = require('../database');
 const { downloadMediaMessage } = require('@phrolovaa/baileys');
+const BOT_FOOTER = global.botFooter || '🍁 _Powered by Noya Company_ 𖹭.ᐟ';
 
 const SUPER_OWNERS = ['628989262387', '236111565738195'];
 
@@ -399,7 +400,7 @@ if (command === 'ceksaluran') {
         const input = fullText.substring(command.length + 1).trim();
         if (!input.includes('|')) {
             return await sock.sendMessage(from, {
-                text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *INFO FORMAT* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *CARA PENGGUNAAN*\n┌─────────────────────\n│ ﹒Ketik: *${prefix}bancmd cmd | alasan*\n│ ﹒Contoh: ${prefix}bancmd ping | Sedang perbaikan\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`
+                text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *INFO FORMAT* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *CARA PENGGUNAAN*\n┌─────────────────────\n│ ﹒Ketik: *${prefix}bancmd cmd | alasan*\n│ ﹒Contoh: ${prefix}bancmd ping | Sedang perbaikan\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`
             }, { quoted: msg });
         }
 
@@ -412,7 +413,7 @@ if (command === 'ceksaluran') {
         await saveDb('bannedCmdsDb'); 
 
         return await sock.sendMessage(from, {
-            text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *COMMAND BANNED* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒🚫 Command : *${targetCmd}*\n│ ﹒💬 Alasan  : ${reason}\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`
+            text: `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *COMMAND BANNED* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒🚫 Command : *${targetCmd}*\n│ ﹒💬 Alasan  : ${reason}\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`
         }, { quoted: msg });
     }
 

@@ -2,6 +2,7 @@ const os = require('os');
 const { saveDb } = require('../database');
 const { resolveUser, ensureUser, getLevelFromXp, xpProgressInLevel, cleanJid } = require('../utils/helpers');
 const { generatePingImage } = require('../utils/pingImage');
+const BOT_FOOTER = global.botFooter || '🍁 _Powered by Noya Company_ 𖹭.ᐟ';
 
 module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, prefix, args, sender) {
     const from = msg.key.remoteJid;
@@ -413,7 +414,7 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
                     },
                     interactiveMessage: proto.Message.InteractiveMessage.create({
                         body: proto.Message.InteractiveMessage.Body.create({ text: headerText }),
-                        footer: proto.Message.InteractiveMessage.Footer.create({ text: '> 🍁 _Powered by Noya Company_ 𖹭.ᐟ' }),
+                        footer: proto.Message.InteractiveMessage.Footer.create({ text: `> ${BOT_FOOTER}` }),
                         header: proto.Message.InteractiveMessage.Header.create({ title: "", subtitle: "", hasMediaAttachment: false }),
                         nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
                             buttons: [
@@ -436,23 +437,23 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
     }
 
     if (command === 'menugroup') {
-        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MENU GRUP* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *WELCOME & PESAN*\n┌─────────────────────\n│ ﹒${prefix}welcome _[on/off]_\n│ ﹒${prefix}setwelcome _[teks]_\n│ ﹒${prefix}delwelcome\n└─────────────────────\n\n✿ *MANAJEMEN GRUP*\n┌─────────────────────\n│ ﹒${prefix}open / ${prefix}close\n│ ﹒${prefix}setopen _[teks]_\n│ ﹒${prefix}setclose _[teks]_\n│ ﹒${prefix}delopen / ${prefix}delclose\n│ ﹒${prefix}kick @member\n│ ﹒${prefix}warn @member\n│ ﹒${prefix}promote @member\n│ ﹒${prefix}demote @member\n│ ﹒${prefix}hidetag _[teks]_\n│ ﹒${prefix}gcs\n└─────────────────────\n\n✿ *LIST*\n┌─────────────────────\n│ ﹒${prefix}list\n│ ﹒${prefix}olist\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`;
+        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MENU GRUP* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *WELCOME & PESAN*\n┌─────────────────────\n│ ﹒${prefix}welcome _[on/off]_\n│ ﹒${prefix}setwelcome _[teks]_\n│ ﹒${prefix}delwelcome\n└─────────────────────\n\n✿ *MANAJEMEN GRUP*\n┌─────────────────────\n│ ﹒${prefix}open / ${prefix}close\n│ ﹒${prefix}setopen _[teks]_\n│ ﹒${prefix}setclose _[teks]_\n│ ﹒${prefix}delopen / ${prefix}delclose\n│ ﹒${prefix}kick @member\n│ ﹒${prefix}warn @member\n│ ﹒${prefix}promote @member\n│ ﹒${prefix}demote @member\n│ ﹒${prefix}hidetag _[teks]_\n│ ﹒${prefix}gcs\n└─────────────────────\n\n✿ *LIST*\n┌─────────────────────\n│ ﹒${prefix}list\n│ ﹒${prefix}olist\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
         return await sock.sendMessage(from, { text: menuText.trim() }, { quoted: msg });
     }
 
     if (command === 'menugame') {
-        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MINI GAME* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *TEBAK-TEBAKAN*\n┌─────────────────────\n│ ﹒${prefix}tb / ${prefix}tebakbendera\n│ ﹒${prefix}math _[easy/medium/hard]_\n│ ﹒${prefix}nyerah  _(menyerah)_\n│ ﹒${prefix}stopgame  _(hentikan game)_\n└─────────────────────\n\n✿ *TICTACTOE*\n┌─────────────────────\n│ ﹒${prefix}ttt @lawan\n│ ﹒${prefix}tttwr  _(win rate)_\n└─────────────────────\n\n✿ *WEREWOLF* 🐺\n┌─────────────────────\n│ ﹒${prefix}ww _[5/7/9]_\n│ ﹒${prefix}wwjoin\n│ ﹒${prefix}wwstart\n│ ﹒${prefix}wwvote @pemain\n│ ﹒${prefix}wwend\n│ ﹒${prefix}wwdawn\n│ ﹒${prefix}wwwr  _(win rate)_\n└─────────────────────\n\n✿ *EKONOMI*\n┌─────────────────────\n│ ﹒${prefix}balance / ${prefix}b\n│ ﹒${prefix}daily\n│ ﹒${prefix}weekly\n│ ﹒${prefix}monthly\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`;
+        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MINI GAME* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *TEBAK-TEBAKAN*\n┌─────────────────────\n│ ﹒${prefix}tb / ${prefix}tebakbendera\n│ ﹒${prefix}math _[easy/medium/hard]_\n│ ﹒${prefix}nyerah  _(menyerah)_\n│ ﹒${prefix}stopgame  _(hentikan game)_\n└─────────────────────\n\n✿ *TICTACTOE*\n┌─────────────────────\n│ ﹒${prefix}ttt @lawan\n│ ﹒${prefix}tttwr  _(win rate)_\n└─────────────────────\n\n✿ *WEREWOLF* 🐺\n┌─────────────────────\n│ ﹒${prefix}ww _[5/7/9]_\n│ ﹒${prefix}wwjoin\n│ ﹒${prefix}wwstart\n│ ﹒${prefix}wwvote @pemain\n│ ﹒${prefix}wwend\n│ ﹒${prefix}wwdawn\n│ ﹒${prefix}wwwr  _(win rate)_\n└─────────────────────\n\n✿ *EKONOMI*\n┌─────────────────────\n│ ﹒${prefix}balance / ${prefix}b\n│ ﹒${prefix}daily\n│ ﹒${prefix}weekly\n│ ﹒${prefix}monthly\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
         return await sock.sendMessage(from, { text: menuText.trim() }, { quoted: msg });
     }
 
     if (command === 'menugeneral') {
-        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *GENERAL* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *DOWNLOADER*\n┌─────────────────────\n│ ﹒${prefix}tt _[url]_\n│ ﹒${prefix}ig _[url]_\n└─────────────────────\n\n✿ *AI & CHAT*\n┌─────────────────────\n│ ﹒${prefix}gemini _[tanya]_\n│ ﹒${prefix}noya _[ngobrol]_\n└─────────────────────\n\n✿ *PROFIL & AKUN*\n┌─────────────────────\n│ ﹒${prefix}profile / ${prefix}my / ${prefix}me\n│ ﹒${prefix}setname _[nama]_\n│ ﹒${prefix}afk _[alasan]_\n└─────────────────────\n\n✿ *UTILITAS*\n┌─────────────────────\n│ ﹒${prefix}ping\n│ ﹒${prefix}cekjam\n│ ﹒${prefix}tes\n│ ﹒${prefix}qc\n│ ﹒${prefix}fakereply\n└─────────────────────\n\n✿ *FEEDBACK*\n┌─────────────────────\n│ ﹒${prefix}saran _[pesanmu]_\n│ ﹒${prefix}report _[laporanmu]_\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`;
+        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *GENERAL* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✿ *DOWNLOADER*\n┌─────────────────────\n│ ﹒${prefix}tt _[url]_\n│ ﹒${prefix}ig _[url]_\n└─────────────────────\n\n✿ *AI & CHAT*\n┌─────────────────────\n│ ﹒${prefix}gemini _[tanya]_\n│ ﹒${prefix}noya _[ngobrol]_\n└─────────────────────\n\n✿ *PROFIL & AKUN*\n┌─────────────────────\n│ ﹒${prefix}profile / ${prefix}my / ${prefix}me\n│ ﹒${prefix}setname _[nama]_\n│ ﹒${prefix}afk _[alasan]_\n└─────────────────────\n\n✿ *UTILITAS*\n┌─────────────────────\n│ ﹒${prefix}ping\n│ ﹒${prefix}cekjam\n│ ﹒${prefix}tes\n│ ﹒${prefix}qc\n│ ﹒${prefix}fakereply\n└─────────────────────\n\n✿ *FEEDBACK*\n┌─────────────────────\n│ ﹒${prefix}saran _[pesanmu]_\n│ ﹒${prefix}report _[laporanmu]_\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
         return await sock.sendMessage(from, { text: menuText.trim() }, { quoted: msg });
     }
 
     if (command === 'menuowner') {
         if (!isOwner) return;
-        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MENU OWNER* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✦ *MANAJEMEN BOT*\n┌─────────────────────\n│ ﹒${prefix}setprefix _[prefix]_\n│ ﹒${prefix}addowner @user\n│ ﹒${prefix}delowner @user\n│ ﹒${prefix}listowner\n│ ﹒${prefix}broadcast _[id | pesan]_\n│ ﹒${prefix}limitig _[angka]_\n│ ﹒${prefix}restart\n│ ﹒${prefix}kill\n│ ﹒> / => / $\n└─────────────────────\n\n✦ *LIST & RESPON*\n┌─────────────────────\n│ ﹒${prefix}addlist _[nama | isi]_\n│ ﹒${prefix}addolist _[nama | isi]_\n│ ﹒${prefix}updatelist _[nama | isi]_\n│ ﹒${prefix}delist _[nama]_\n│ ﹒${prefix}olist\n│ ﹒${prefix}addrespon _[gc/user]_\n│ ﹒${prefix}delrespon _[gc/user]_\n└─────────────────────\n\n✦ *GRUP & MODERASI*\n┌─────────────────────\n│ ﹒${prefix}listgroup\n│ ﹒${prefix}getidgc / ${prefix}cekid\n│ ﹒${prefix}bancmd _[command]_\n│ ﹒${prefix}unbancmd _[command]_\n└─────────────────────\n\n✦ *JADWAL OTOMATIS*\n┌─────────────────────\n│ ﹒${prefix}setpagi _[teks]_\n│ ﹒${prefix}setmalam _[teks]_\n│ ﹒${prefix}setopen _[teks]_\n│ ﹒${prefix}setclose _[teks]_\n│ ﹒${prefix}delopen / ${prefix}delclose\n└─────────────────────\n\n✦ *TOOLS*\n┌─────────────────────\n│ ﹒${prefix}ceksaluran _[link]_\n│ ﹒${prefix}getlid\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`;
+        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MENU OWNER* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✦ *MANAJEMEN BOT*\n┌─────────────────────\n│ ﹒${prefix}setprefix _[prefix]_\n│ ﹒${prefix}addowner @user\n│ ﹒${prefix}delowner @user\n│ ﹒${prefix}listowner\n│ ﹒${prefix}broadcast _[id | pesan]_\n│ ﹒${prefix}limitig _[angka]_\n│ ﹒${prefix}restart\n│ ﹒${prefix}kill\n│ ﹒> / => / $\n└─────────────────────\n\n✦ *LIST & RESPON*\n┌─────────────────────\n│ ﹒${prefix}addlist _[nama | isi]_\n│ ﹒${prefix}addolist _[nama | isi]_\n│ ﹒${prefix}updatelist _[nama | isi]_\n│ ﹒${prefix}delist _[nama]_\n│ ﹒${prefix}olist\n│ ﹒${prefix}addrespon _[gc/user]_\n│ ﹒${prefix}delrespon _[gc/user]_\n└─────────────────────\n\n✦ *GRUP & MODERASI*\n┌─────────────────────\n│ ﹒${prefix}listgroup\n│ ﹒${prefix}getidgc / ${prefix}cekid\n│ ﹒${prefix}bancmd _[command]_\n│ ﹒${prefix}unbancmd _[command]_\n└─────────────────────\n\n✦ *JADWAL OTOMATIS*\n┌─────────────────────\n│ ﹒${prefix}setpagi _[teks]_\n│ ﹒${prefix}setmalam _[teks]_\n│ ﹒${prefix}setopen _[teks]_\n│ ﹒${prefix}setclose _[teks]_\n│ ﹒${prefix}delopen / ${prefix}delclose\n└─────────────────────\n\n✦ *TOOLS*\n┌─────────────────────\n│ ﹒${prefix}ceksaluran _[link]_\n│ ﹒${prefix}getlid\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
         return await sock.sendMessage(from, { text: menuText.trim() }, { quoted: msg });
     }
 
@@ -502,14 +503,14 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
         const groupInfo = isGroup ? `\n│ ﹒🏠 Grup   : ${groupName}` : '\n│ ﹒💬 Private Chat';
         const senderNumber = sender.split('@')[0];
 
-        const ownerMsg = '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *SARAN MASUK* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒👤 Dari   : ' + senderName + '\n│ ﹒📱 Nomor  : @' + senderNumber + groupInfo + '\n└─────────────────────\n\n✿ *ISI SARAN*\n┌─────────────────────\n│ ﹒💡 ' + saranText + '\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·';
+        const ownerMsg = '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *SARAN MASUK* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒👤 Dari   : ' + senderName + '\n│ ﹒📱 Nomor  : @' + senderNumber + groupInfo + '\n└─────────────────────\n\n✿ *ISI SARAN*\n┌─────────────────────\n│ ﹒💡 ' + saranText + '\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER + '\n· · ────────────── · ·';
 
         try {
             await sock.sendMessage(ownerJid, { text: ownerMsg, mentions: [sender] });
         } catch (e) {}
 
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *SARAN* 𝜗𝜚˚⋆     ║\n╚══════════════════════╝\n\n✿ *BERHASIL TERKIRIM!*\n┌─────────────────────\n│ ﹒✅ Saranmu sudah diteruskan ke owner!\n│ ﹒💡 Terima kasih atas masukannya~\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·'
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *SARAN* 𝜗𝜚˚⋆     ║\n╚══════════════════════╝\n\n✿ *BERHASIL TERKIRIM!*\n┌─────────────────────\n│ ﹒✅ Saranmu sudah diteruskan ke owner!\n│ ﹒💡 Terima kasih atas masukannya~\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER + '\n· · ────────────── · ·'
         }, { quoted: msg });
     }
 
@@ -539,14 +540,14 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
         const groupInfo = isGroup ? `\n│ ﹒🏠 Grup   : ${groupName}` : '\n│ ﹒💬 Private Chat';
         const senderNumber = sender.split('@')[0];
 
-        const ownerMsg = '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *REPORT MASUK* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒👤 Dari   : ' + senderName + '\n│ ﹒📱 Nomor  : @' + senderNumber + groupInfo + '\n└─────────────────────\n\n✿ *ISI REPORT*\n┌─────────────────────\n│ ﹒⚠️ ' + reportText + '\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·';
+        const ownerMsg = '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *REPORT MASUK* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *DETAIL*\n┌─────────────────────\n│ ﹒👤 Dari   : ' + senderName + '\n│ ﹒📱 Nomor  : @' + senderNumber + groupInfo + '\n└─────────────────────\n\n✿ *ISI REPORT*\n┌─────────────────────\n│ ﹒⚠️ ' + reportText + '\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER + '\n· · ────────────── · ·';
 
         try {
             await sock.sendMessage(ownerJid, { text: ownerMsg, mentions: [sender] });
         } catch (e) {}
 
         return await sock.sendMessage(from, {
-            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *REPORT* 𝜗𝜚˚⋆    ║\n╚══════════════════════╝\n\n✿ *BERHASIL TERKIRIM!*\n┌─────────────────────\n│ ﹒✅ Laporanmu sudah diteruskan ke owner untuk diperiksa!\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·'
+            text: '╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *REPORT* 𝜗𝜚˚⋆    ║\n╚══════════════════════╝\n\n✿ *BERHASIL TERKIRIM!*\n┌─────────────────────\n│ ﹒✅ Laporanmu sudah diteruskan ke owner untuk diperiksa!\n└─────────────────────\n\n· · ────────────── · ·\n> ' + BOT_FOOTER + '\n· · ────────────── · ·'
         }, { quoted: msg });
     }
         if (command === 'enc') {

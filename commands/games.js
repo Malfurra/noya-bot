@@ -285,7 +285,7 @@ function generateMath(difficulty) {
 const TTT_SYMBOLS = { X: '✖️', O: '⭕' };
 const TTT_EMPTY   = '➖';
 const TTT_WINS    = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-const noyaFooter  = '\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·';
+const noyaFooter  = `\n· · ────────────── · ·\n> ${global.botFooter || '🍁 _Powered by Noya Company_ 𖹭.ᐟ'}\n· · ────────────── · ·`;
 
 function renderBoard(board) {
     const b = board.map(c => c ? TTT_SYMBOLS[c] : TTT_EMPTY);

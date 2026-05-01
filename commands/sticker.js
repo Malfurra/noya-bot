@@ -8,6 +8,7 @@ const FormData = require('form-data');
 const cheerio = require('cheerio');
 const webpmux = require('node-webpmux');
 const ffmpegPath = require('ffmpeg-static');
+const BOT_FOOTER = global.botFooter || '🍁 _Powered by Noya Company_ 𖹭.ᐟ';
 
 async function webp2mp4File(path) {
     return new Promise(async (resolve, reject) => {
@@ -203,7 +204,7 @@ module.exports = async function stickerCmd(sock, msg, command, args, from, prefi
     const isVideo = msgType === 'videoMessage';
 
     const replyError = (text) => {
-        const errorText = `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *ERROR* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PEMBERITAHUAN*\n┌─────────────────────\n│ ﹒🚫 ${text}\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`;
+        const errorText = `╔══════════════════════╗\n║ ⋆. 𐙚˚࿔ *ERROR* 𝜗𝜚˚⋆ ║\n╚══════════════════════╝\n\n✿ *PEMBERITAHUAN*\n┌─────────────────────\n│ ﹒🚫 ${text}\n└─────────────────────\n\n· · ────────────── · ·\n> ${BOT_FOOTER}\n· · ────────────── · ·`;
         return sock.sendMessage(from, { text: errorText }, { quoted: msg });
     };
 
@@ -257,8 +258,8 @@ module.exports = async function stickerCmd(sock, msg, command, args, from, prefi
             }
 
             if (command === 'swm' || command === 'stikerwm') {
-                let packname = "Noya Store";
-                let author = "Bot";
+                let packname = global.packname || 'Noya Bot';
+                let author = global.author || 'Noya Company';
                 
                 if (args.length > 0) {
                     const argStr = args.join(' ');

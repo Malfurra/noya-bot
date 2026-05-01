@@ -43,7 +43,7 @@ async function connectDb() {
         pagi:  { texts: config.templatePagi,  target: null, enabled: false },
         malam: { texts: config.templateMalam, target: null, enabled: false }
     };
-    dbs.settingsDb  = dbMap['settingsDb']  || { prefix: '.' };
+    dbs.settingsDb  = dbMap['settingsDb']  || { prefix: global.prefa?.[0] || '.' };
     dbs.warnDb      = dbMap['warnDb']      || {};
     dbs.groupDb     = dbMap['groupDb']     || {};
     dbs.blockDb     = dbMap['blockDb']     || [];

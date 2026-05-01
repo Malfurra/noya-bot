@@ -97,8 +97,8 @@ module.exports = async function qcCmd(sock, msg, dbs, cleanSenderJid, saveDb) {
 
         if (res.data?.result?.image) {
             const sticker = new Sticker(Buffer.from(res.data.result.image, 'base64'), {
-                pack: 'Meow',
-                author: 'Noya',
+                pack: global.packname || 'Noya Bot',
+                author: global.author || 'Noya Company',
                 type: StickerTypes.FULL,
                 quality: 100
             });

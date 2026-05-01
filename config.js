@@ -1,11 +1,12 @@
 require('dotenv').config();
+require('./setting');
 
 module.exports = {
     mongoUrl: process.env.MONGO_URL,
-    ownerNumbers: ['628989262387@s.whatsapp.net', '6281379143305@s.whatsapp.net'],
-    geminiApiKey: process.env.GEMINI_API_KEY,
-    groqApiKey: process.env.GROQ_API_KEY,
-    openaiApiKey: process.env.OPENAI_API_KEY,
+    ownerNumbers: global.ownerJid || [],
+    geminiApiKey: global.geminiApiKey || process.env.GEMINI_API_KEY,
+    groqApiKey: global.groqApiKey || process.env.GROQ_API_KEY,
+    openaiApiKey: global.openaiApiKey || process.env.OPENAI_API_KEY,
     templatePagi: [
         "Pagi, Diana sayang! ☀️ Jangan lupa senyum hari ini ya, cantiknya kamu makin nambah lho kalau lagi senyum. 🥰",
         "Good morning Mala chan! 🌸 Udah pagi nih, semangat jalani harinya ya! Miss you already! 😘",

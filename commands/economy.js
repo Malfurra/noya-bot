@@ -3,6 +3,7 @@ const { saveDb } = require('../database');
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * DAY_MS;
 const MONTH_MS = 30 * DAY_MS;
+const BOT_FOOTER = global.botFooter || '🍁 _Powered by Noya Company_ 𖹭.ᐟ';
 
 const REWARDS = {
     daily: 5000,
@@ -77,7 +78,7 @@ if (command === 'b' || command === 'balance') {
 └─────────────────────
 
 · · ────────────── · ·
-> 🍁 _Powered by Noya Company_ 𖹭.ᐟ
+> ${BOT_FOOTER}
 · · ────────────── · ·`;
 
         return await sock.sendMessage(from, { 
