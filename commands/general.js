@@ -1,6 +1,7 @@
 const os = require('os');
 const { saveDb } = require('../database');
 const { resolveUser, ensureUser, getLevelFromXp, xpProgressInLevel, cleanJid } = require('../utils/helpers');
+const { generatePingImage } = require('../utils/pingImage');
 
 module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, prefix, args, sender) {
     const from = msg.key.remoteJid;
@@ -18,6 +19,12 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
         return await sock.sendMessage(from, { text: `${timeInfo} WIB` });
     }
 
+    if (command === 'prefix') {
+        return await sock.sendMessage(from, {
+            text: `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *PREFIX* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *INFO PREFIX*\n┌─────────────────────\n│ ﹒📌 Prefix saat ini : *${prefix}*\n│ ﹒💡 Contoh : *${prefix}menu*\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`
+        }, { quoted: msg });
+    }
+
     if (command === 'ping') {
         const latency = Date.now() - (msg.messageTimestamp ? msg.messageTimestamp * 1000 : Date.now());
         const ramTotal = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
@@ -25,9 +32,20 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
         const ramUsed = (ramTotal - ramFree).toFixed(2);
         const uptime = process.uptime();
         const h = Math.floor(uptime / 3600), m = Math.floor((uptime % 3600) / 60), s = Math.floor(uptime % 60);
-        return await sock.sendMessage(from, {
-            text: `PONG!\n\nLatency : ${latency} ms\nOS      : ${os.type()} ${os.release()}\nRAM     : ${ramUsed} / ${ramTotal} GB\nUptime  : ${h}h ${m}m ${s}s`
-        }, { quoted: msg });
+
+        try {
+            const imgBuffer = await generatePingImage(latency);
+
+            return await sock.sendMessage(from, {
+                image: imgBuffer,
+                caption: `🍁 *PONG!*  ∙  ${latency}ms\n\n> _Noya AI — System Status_`
+            }, { quoted: msg });
+        } catch (e) {
+            console.error('Ping image error:', e);
+            return await sock.sendMessage(from, {
+                text: `🍁 *PONG!*  ∙  ${latency}ms\n\n> _Noya AI — System Status_`
+            }, { quoted: msg });
+        }
     }
 
     if (command === 'setname') {
@@ -127,113 +145,115 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
     }
 
     if (command === 'gcs') {
-    if (!isGroup) return;
+        if (!isGroup) return;
 
-    const gm = await sock.groupMetadata(from);
-    const sd = gm.participants.find(p => p.id === sender);
-    const isAdmin = isOwner || (sd && (sd.admin === 'admin' || sd.admin === 'superadmin'));
-    if (!isAdmin) return;
+        const gm = await sock.groupMetadata(from);
+        const sd = gm.participants.find(p => p.id === sender);
+        const isAdmin = isOwner || (sd && (sd.admin === 'admin' || sd.admin === 'superadmin'));
+        if (!isAdmin) return;
 
-    const { downloadMediaMessage } = require('@phrolovaa/baileys');
+        const { downloadMediaMessage } = require('@phrolovaa/baileys');
 
-    const contextInfo = msg.message?.extendedTextMessage?.contextInfo
-        || msg.message?.imageMessage?.contextInfo
-        || msg.message?.videoMessage?.contextInfo
-        || msg.message?.audioMessage?.contextInfo;
+        const contextInfo = msg.message?.extendedTextMessage?.contextInfo
+            || msg.message?.imageMessage?.contextInfo
+            || msg.message?.videoMessage?.contextInfo
+            || msg.message?.audioMessage?.contextInfo;
 
-    const quotedMsg = contextInfo?.quotedMessage;
-    const isQuotedTxt = quotedMsg?.conversation || quotedMsg?.extendedTextMessage?.text;
-    const textInput = args.length > 0 ? args.join(' ') : (isQuotedTxt || '');
+        const quotedMsg = contextInfo?.quotedMessage;
+        const isQuotedTxt = quotedMsg?.conversation || quotedMsg?.extendedTextMessage?.text;
+        const textInput = args.length > 0 ? args.join(' ') : (isQuotedTxt || '');
 
-    try {
-        let mediaMsg = null, mediaType = '';
+        // Collect all participant JIDs for statusJidList
+        const statusJidList = gm.participants.map(p => p.id);
 
-        if (msg.message.imageMessage) {
-            mediaMsg = msg;
-            mediaType = 'image';
-        } else if (quotedMsg?.imageMessage) {
-            mediaMsg = {
-                key: {
-                    remoteJid: from,
-                    id: contextInfo?.stanzaId,
-                    participant: contextInfo?.participant || undefined,
-                    fromMe: false,
-                },
-                message: quotedMsg,
-            };
-            mediaType = 'image';
-        } else if (msg.message.videoMessage) {
-            mediaMsg = msg;
-            mediaType = 'video';
-        } else if (quotedMsg?.videoMessage) {
-            mediaMsg = {
-                key: {
-                    remoteJid: from,
-                    id: contextInfo?.stanzaId,
-                    participant: contextInfo?.participant || undefined,
-                    fromMe: false,
-                },
-                message: quotedMsg,
-            };
-            mediaType = 'video';
-        } else if (msg.message.audioMessage) {
-            mediaMsg = msg;
-            mediaType = 'audio';
-        } else if (quotedMsg?.audioMessage) {
-            mediaMsg = {
-                key: {
-                    remoteJid: from,
-                    id: contextInfo?.stanzaId,
-                    participant: contextInfo?.participant || undefined,
-                    fromMe: false,
-                },
-                message: quotedMsg,
-            };
-            mediaType = 'audio';
-        }
+        try {
+            let mediaMsg = null, mediaType = '';
 
-        if (mediaMsg) {
-            const buf = await downloadMediaMessage(mediaMsg, 'buffer', {});
-            if (mediaType === 'image') {
-                await sock.sendMessage([from], {
-                    image: buf,
-                    caption: textInput || '',
-                    groupStatus: true,
-                });
-            } else if (mediaType === 'video') {
-                await sock.sendMessage([from], {
-                    video: buf,
-                    caption: textInput || '',
-                    groupStatus: true,
-                });
-            } else if (mediaType === 'audio') {
-                await sock.sendMessage([from], {
-                    audio: buf,
-                    ptt: true,
-                    groupStatus: true,
-                });
+            if (msg.message.imageMessage) {
+                mediaMsg = msg;
+                mediaType = 'image';
+            } else if (quotedMsg?.imageMessage) {
+                mediaMsg = {
+                    key: {
+                        remoteJid: from,
+                        id: contextInfo?.stanzaId,
+                        participant: contextInfo?.participant || undefined,
+                        fromMe: false,
+                    },
+                    message: quotedMsg,
+                };
+                mediaType = 'image';
+            } else if (msg.message.videoMessage) {
+                mediaMsg = msg;
+                mediaType = 'video';
+            } else if (quotedMsg?.videoMessage) {
+                mediaMsg = {
+                    key: {
+                        remoteJid: from,
+                        id: contextInfo?.stanzaId,
+                        participant: contextInfo?.participant || undefined,
+                        fromMe: false,
+                    },
+                    message: quotedMsg,
+                };
+                mediaType = 'video';
+            } else if (msg.message.audioMessage) {
+                mediaMsg = msg;
+                mediaType = 'audio';
+            } else if (quotedMsg?.audioMessage) {
+                mediaMsg = {
+                    key: {
+                        remoteJid: from,
+                        id: contextInfo?.stanzaId,
+                        participant: contextInfo?.participant || undefined,
+                        fromMe: false,
+                    },
+                    message: quotedMsg,
+                };
+                mediaType = 'audio';
             }
-            return;
+
+            if (mediaMsg) {
+                const buf = await downloadMediaMessage(mediaMsg, 'buffer', {});
+                if (mediaType === 'image') {
+                    await sock.sendMessage('status@broadcast', {
+                        image: buf,
+                        caption: textInput || '',
+                    }, { statusJidList });
+                } else if (mediaType === 'video') {
+                    await sock.sendMessage('status@broadcast', {
+                        video: buf,
+                        caption: textInput || '',
+                    }, { statusJidList });
+                } else if (mediaType === 'audio') {
+                    await sock.sendMessage('status@broadcast', {
+                        audio: buf,
+                        ptt: true,
+                    }, { statusJidList });
+                }
+                await sock.sendMessage(from, { text: '✅ Berhasil dikirim ke status/channel grup!' }, { quoted: msg });
+                return;
+            }
+
+            if (textInput) {
+                await sock.sendMessage('status@broadcast', {
+                    text: textInput,
+                }, {
+                    statusJidList,
+                    backgroundColor: '#000000',
+                    font: 1,
+                });
+                await sock.sendMessage(from, { text: '✅ Berhasil dikirim ke status/channel grup!' }, { quoted: msg });
+                return;
+            }
+
+            await sock.sendMessage(from, { text: 'Kirim atau reply gambar/video/audio, atau tulis teks.' }, { quoted: msg });
+
+        } catch (e) {
+            console.error('GCS Error:', e);
+            await sock.sendMessage(from, { text: 'Gagal kirim group status: ' + e.message }, { quoted: msg });
         }
-
-        if (textInput) {
-            await sock.sendMessage([from], {
-                text: textInput,
-                groupStatus: true,
-            }, {
-                backgroundColor: '#000000',
-                font: 1,
-            });
-            return;
-        }
-
-        await sock.sendMessage(from, { text: 'Kirim atau reply gambar/video/audio, atau tulis teks.' }, { quoted: msg });
-
-    } catch (e) {
-        console.error('GCS Error:', e);
-        await sock.sendMessage(from, { text: 'Gagal kirim group status: ' + e.message }, { quoted: msg });
     }
-}
 
         if (['fakereply', 'freply', 'fr'].includes(command)) {
     const textArgs = args.join(' ');

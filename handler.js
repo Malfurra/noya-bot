@@ -13,7 +13,7 @@ const { gameCmd, handleGameAnswer, handleWWNightAction } = require('./commands/g
 const stickerCmd = require('./commands/sticker');
 
 const processedMessages = new Set();
-const GENERAL_CMDS = new Set(['tes','cekjam','menu','menugroup','menugame','menugeneral','menuowner','list','olist','ping','setname','profile','my','me','afk','welcome','setwelcome','delwelcome','gcs','saran','report', 'fakereply', 'freply','fr', 'enc', 'dec']);
+const GENERAL_CMDS = new Set(['tes','cekjam','menu','menugroup','menugame','menugeneral','menuowner','list','olist','ping','setname','profile','my','me','afk','welcome','setwelcome','delwelcome','gcs','saran','report', 'fakereply', 'freply','fr', 'enc', 'dec', 'prefix']);
 const DOWNLOAD_CMDS = new Set(['tt','ig','yt','twitter','limitig']);
 const AI_CMDS = new Set(['gemini','noya']);
 const GAME_CMDS = new Set(['tb','tebakbendera','ttt','tictactoe','stopgame','tttwr','math','nyerah','ww','werewolf','wwjoin','wwstart','wwvote','wwend','wwdawn','wwwr','werewolfwinrate']);
@@ -172,6 +172,13 @@ module.exports = async function messageHandler(sock, m) {
 
         if (fullText.startsWith('>') || fullText.startsWith('=>') || fullText.startsWith('$')) {
             return await execCmd(sock, msg, fullText, isOwner);
+        }
+
+        // Handle "prefix" typed without the actual prefix
+        if (fullText.toLowerCase() === 'prefix') {
+            return await sock.sendMessage(from, {
+                text: `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *PREFIX* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *INFO PREFIX*\n┌─────────────────────\n│ ﹒📌 Prefix saat ini : *${prefix}*\n│ ﹒💡 Contoh : *${prefix}menu*\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`
+            }, { quoted: msg });
         }
 
         if (!fullText.startsWith(prefix)) return;
