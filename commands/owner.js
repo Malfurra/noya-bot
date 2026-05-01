@@ -345,9 +345,14 @@ if (command === 'ceksaluran') {
             } else if (args[0].endsWith('@g.us')) {
                 finalTarget = args[0];
             }
+        } else if (!target && isGroup) {
+            // Default ke grup jika tidak ada argumen dan tidak me-reply siapa-siapa
+            finalTarget = from;
         }
 
-        if (!finalTarget) return await sock.sendMessage(from, { text: `Kirim ${prefix}${command} gc/grup, ID grup, atau tag/reply user.` }, { quoted: msg });
+        if (!finalTarget || finalTarget === '@s.whatsapp.net') {
+            return await sock.sendMessage(from, { text: `Kirim ${prefix}${command} (di dalam grup), ID grup, atau tag/reply user.` }, { quoted: msg });
+        }
 
         const isTargetGroup = finalTarget.endsWith('@g.us');
 

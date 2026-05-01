@@ -176,9 +176,8 @@ module.exports = async function messageHandler(sock, m) {
 
         // Handle "prefix" typed without the actual prefix
         if (fullText.toLowerCase() === 'prefix') {
-            return await sock.sendMessage(from, {
-                text: `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *PREFIX* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *INFO PREFIX*\n┌─────────────────────\n│ ﹒📌 Prefix saat ini : *${prefix}*\n│ ﹒💡 Contoh : *${prefix}menu*\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`
-            }, { quoted: msg });
+            if (!isAuthorized) return;
+            return await sock.sendMessage(from, { text: `Prefix saat ini adalah : ${prefix}` }, { quoted: msg });
         }
 
         if (!fullText.startsWith(prefix)) return;

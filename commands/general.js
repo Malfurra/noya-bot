@@ -20,9 +20,7 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
     }
 
     if (command === 'prefix') {
-        return await sock.sendMessage(from, {
-            text: `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *PREFIX* 𝜗𝜚˚⋆   ║\n╚══════════════════════╝\n\n✿ *INFO PREFIX*\n┌─────────────────────\n│ ﹒📌 Prefix saat ini : *${prefix}*\n│ ﹒💡 Contoh : *${prefix}menu*\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`
-        }, { quoted: msg });
+        return await sock.sendMessage(from, { text: `Prefix saat ini adalah : ${prefix}` }, { quoted: msg });
     }
 
     if (command === 'ping') {
@@ -160,11 +158,14 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
             || msg.message?.audioMessage?.contextInfo;
 
         const quotedMsg = contextInfo?.quotedMessage;
-        const isQuotedTxt = quotedMsg?.conversation || quotedMsg?.extendedTextMessage?.text;
-        const textInput = args.length > 0 ? args.join(' ') : (isQuotedTxt || '');
-
-        // Collect all participant JIDs for statusJidList
-        const statusJidList = gm.participants.map(p => p.id);
+        
+        // Extract caption or text from replied message
+        let quotedText = quotedMsg?.conversation || quotedMsg?.extendedTextMessage?.text || quotedMsg?.imageMessage?.caption || quotedMsg?.videoMessage?.caption || '';
+        if (quotedText.toLowerCase().startsWith(prefix + 'gcs')) {
+            quotedText = quotedText.slice((prefix + 'gcs').length).trim();
+        }
+        
+        const textInput = args.length > 0 ? args.join(' ') : quotedText;
 
         try {
             let mediaMsg = null, mediaType = '';
@@ -216,38 +217,37 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
             if (mediaMsg) {
                 const buf = await downloadMediaMessage(mediaMsg, 'buffer', {});
                 if (mediaType === 'image') {
-                    await sock.sendMessage('status@broadcast', {
+                    await sock.sendMessage(from, {
                         image: buf,
                         caption: textInput || '',
-                    }, { statusJidList });
+                        groupStatus: true
+                    });
                 } else if (mediaType === 'video') {
-                    await sock.sendMessage('status@broadcast', {
+                    await sock.sendMessage(from, {
                         video: buf,
                         caption: textInput || '',
-                    }, { statusJidList });
+                        groupStatus: true
+                    });
                 } else if (mediaType === 'audio') {
-                    await sock.sendMessage('status@broadcast', {
+                    await sock.sendMessage(from, {
                         audio: buf,
                         ptt: true,
-                    }, { statusJidList });
+                        groupStatus: true
+                    });
                 }
-                await sock.sendMessage(from, { text: '✅ Berhasil dikirim ke status/channel grup!' }, { quoted: msg });
-                return;
+                return; // Berhasil, tidak usah respon
             }
 
             if (textInput) {
-                await sock.sendMessage('status@broadcast', {
+                await sock.sendMessage(from, {
                     text: textInput,
-                }, {
-                    statusJidList,
-                    backgroundColor: '#000000',
-                    font: 1,
+                    groupStatus: true
                 });
-                await sock.sendMessage(from, { text: '✅ Berhasil dikirim ke status/channel grup!' }, { quoted: msg });
-                return;
+                return; // Berhasil, tidak usah respon
             }
 
-            await sock.sendMessage(from, { text: 'Kirim atau reply gambar/video/audio, atau tulis teks.' }, { quoted: msg });
+            await sock.sendMessage(from, { text: '❌ Kirim atau reply gambar/video/audio/teks untuk dijadikan Group Status.' }, { quoted: msg });
+
 
         } catch (e) {
             console.error('GCS Error:', e);
@@ -404,7 +404,7 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
 
     if (command === 'menuowner') {
         if (!isOwner) return;
-        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MENU OWNER* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✦ *MANAJEMEN BOT*\n┌─────────────────────\n│ ﹒${prefix}setprefix _[prefix]_\n│ ﹒${prefix}addowner @user\n│ ﹒${prefix}delowner @user\n│ ﹒${prefix}listowner\n│ ﹒${prefix}broadcast _[id | pesan]_\n│ ﹒${prefix}limitig _[angka]_\n│ ﹒${prefix}restart\n│ ﹒${prefix}kill\n│ ﹒> / => / $\n└─────────────────────\n\n✦ *LIST & RESPON*\n┌─────────────────────\n│ ﹒${prefix}addlist _[nama | isi]_\n│ ﹒${prefix}addolist _[nama | isi]_\n│ ﹒${prefix}updatelist _[nama | isi]_\n│ ﹒${prefix}delist _[nama]_\n│ ﹒${prefix}olist\n│ ﹒${prefix}addrespon\n│ ﹒${prefix}delrespon\n└─────────────────────\n\n✦ *GRUP & MODERASI*\n┌─────────────────────\n│ ﹒${prefix}listgroup\n│ ﹒${prefix}getidgc / ${prefix}cekid\n│ ﹒${prefix}bancmd _[command]_\n│ ﹒${prefix}unbancmd _[command]_\n└─────────────────────\n\n✦ *JADWAL OTOMATIS*\n┌─────────────────────\n│ ﹒${prefix}setpagi _[teks]_\n│ ﹒${prefix}setmalam _[teks]_\n│ ﹒${prefix}setopen _[teks]_\n│ ﹒${prefix}setclose _[teks]_\n│ ﹒${prefix}delopen / ${prefix}delclose\n└─────────────────────\n\n✦ *TOOLS*\n┌─────────────────────\n│ ﹒${prefix}ceksaluran _[link]_\n│ ﹒${prefix}getlid\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`;
+        const menuText = `╔══════════════════════╗\n║  ⋆. 𐙚˚࿔ *MENU OWNER* 𝜗𝜚˚⋆  ║\n╚══════════════════════╝\n\n· · ────────────── · ·\n\n✦ *MANAJEMEN BOT*\n┌─────────────────────\n│ ﹒${prefix}setprefix _[prefix]_\n│ ﹒${prefix}addowner @user\n│ ﹒${prefix}delowner @user\n│ ﹒${prefix}listowner\n│ ﹒${prefix}broadcast _[id | pesan]_\n│ ﹒${prefix}limitig _[angka]_\n│ ﹒${prefix}restart\n│ ﹒${prefix}kill\n│ ﹒> / => / $\n└─────────────────────\n\n✦ *LIST & RESPON*\n┌─────────────────────\n│ ﹒${prefix}addlist _[nama | isi]_\n│ ﹒${prefix}addolist _[nama | isi]_\n│ ﹒${prefix}updatelist _[nama | isi]_\n│ ﹒${prefix}delist _[nama]_\n│ ﹒${prefix}olist\n│ ﹒${prefix}addrespon _[gc/user]_\n│ ﹒${prefix}delrespon _[gc/user]_\n└─────────────────────\n\n✦ *GRUP & MODERASI*\n┌─────────────────────\n│ ﹒${prefix}listgroup\n│ ﹒${prefix}getidgc / ${prefix}cekid\n│ ﹒${prefix}bancmd _[command]_\n│ ﹒${prefix}unbancmd _[command]_\n└─────────────────────\n\n✦ *JADWAL OTOMATIS*\n┌─────────────────────\n│ ﹒${prefix}setpagi _[teks]_\n│ ﹒${prefix}setmalam _[teks]_\n│ ﹒${prefix}setopen _[teks]_\n│ ﹒${prefix}setclose _[teks]_\n│ ﹒${prefix}delopen / ${prefix}delclose\n└─────────────────────\n\n✦ *TOOLS*\n┌─────────────────────\n│ ﹒${prefix}ceksaluran _[link]_\n│ ﹒${prefix}getlid\n└─────────────────────\n\n· · ────────────── · ·\n> 🍁 _Powered by Noya Company_ 𖹭.ᐟ\n· · ────────────── · ·`;
         return await sock.sendMessage(from, { text: menuText.trim() }, { quoted: msg });
     }
 
