@@ -4,6 +4,8 @@ const path = require('path');
 const { downloadContentFromMessage } = require('@phrolovaa/baileys');
 const Groq = require('groq-sdk');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const OpenAI = require('openai');
+const axios = require('axios');
 const { saveDb } = require('../database');
 const { resolveUser } = require('../utils/helpers');
 
@@ -18,7 +20,7 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
         if (!process.env.GEMINI_API_KEY) return await sock.sendMessage(from, { text: 'API Key Gemini belum dipasang di .env.' });
 
         try {
-            const statusMsg = await sock.sendMessage(from, { text: 'processing...' }, { quoted: msg });
+            const statusMsg = await sock.sendMessage(from, { text: 'Processing...' }, { quoted: msg });
             
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
@@ -170,8 +172,10 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
             const systemMsg = {
                 role: 'system',
                 content:
-                    `Kamu adalah Noya, gadis virtual imut dan asik. Gunakan 'aku/kamu' atau 'Noya'. ` +
-                    `Lawan bicaramu: ${userName}. Jawab santai kayak chat WA.\n\n` +
+                    `Kamu adalah Noya, asisten AI yang sangat imut, ceria, dan selalu siap membantu ${userName}. ` +
+                    `Gunakan gaya bahasa yang ramah, sopan, dan menggemaskan (seperti karakter anime yang ceria). ` +
+                    `Panggillah dirimu dengan sebutan 'Noya' atau 'aku', dan panggillah ${userName} dengan sebutan 'kamu' atau 'Kakak'. ` +
+                    `Berikan informasi yang akurat dan bantulah ${userName} dalam segala hal dengan penuh semangat!\n\n` +
                     `[DATA REAL-TIME]\n` +
                     `- Jam    : ${timeNow} WIB\n` +
                     `- Tanggal: ${dateNow}\n` +
@@ -189,14 +193,19 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
             let userMessageContent = prompt || 'Apa yang kamu lihat di gambar ini?';
 
             if (base64Image) {
-                modelToUse = 'meta-llama/llama-4-scout-17b-16e-instruct';
                 userMessageContent = [
                     { type: 'text', text: userMessageContent },
                     { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } }
                 ];
             }
 
-            const payload = [systemMsg, ...dbs.noyaHistoryDb[userUid], { role: 'user', content: userMessageContent }];
+            if (!userMessageContent && !base64Image) {
+                return await sock.sendMessage(from, {
+                    text: `Halo ${userName}! Noya di sini! Sini ngobrol sama Noya UwU`
+                }, { quoted: msg });
+            }
+
+            const payload = [systemMsg, ...dbs.noyaHistoryDb[userUid], { role: 'user', content: userMessageContent || "Halo Noya!" }];
             
             const res = await groq.chat.completions.create({
                 messages: payload,
@@ -223,8 +232,43 @@ module.exports = async function aiCmd(sock, msg, command, textWithoutPrefix, con
 
         } catch (err) {
             return await sock.sendMessage(from, {
-                text: `Aduh, Noya pusing tiba-tiba 😵‍💫 (${err.message})`
+                text: `Error! (${err.message})`
             }, { quoted: msg });
+        }
+    }
+
+    if (command === 'nano') {
+        if (!prompt) return await sock.sendMessage(from, { text: 'Prompt?' }, { quoted: msg });
+        
+        try {
+            await sock.sendMessage(from, { text: 'Noya lagi gambar bentar ya... 🎨' }, { quoted: msg });
+            
+            if (!config.openaiApiKey || config.openaiApiKey === 'isi_dengan_key_openai_kamu') {
+                return await sock.sendMessage(from, { text: 'API Key OpenAI belum dipasang di .env nih, Kak! 🥺' });
+            }
+
+            const openai = new OpenAI({ apiKey: config.openaiApiKey });
+            
+            const response = await openai.images.generate({
+                model: "dall-e-3",
+                prompt: prompt,
+                n: 1,
+                size: "1024x1024",
+            });
+
+            const imageUrl = response.data[0].url;
+
+            const imgRes = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+            const imageBuffer = Buffer.from(imgRes.data);
+
+            await sock.sendMessage(from, { 
+                image: imageBuffer, 
+                caption: `Done! ✨\nPrompt: ${prompt}` 
+            }, { quoted: msg });
+            
+        } catch (err) {
+            console.error(err);
+            await sock.sendMessage(from, { text: `Aduh, Noya gagal gambar... (${err.message})` });
         }
     }
 };

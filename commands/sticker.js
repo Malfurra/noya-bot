@@ -7,6 +7,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const cheerio = require('cheerio');
 const webpmux = require('node-webpmux');
+const ffmpegPath = require('ffmpeg-static');
 
 async function webp2mp4File(path) {
     return new Promise(async (resolve, reject) => {
@@ -54,6 +55,52 @@ async function webp2mp4File(path) {
     });
 }
 
+async function webp2imgFile(path) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const form = new FormData();
+            form.append('new-image-url', '');
+            form.append('new-image', fs.createReadStream(path));
+            
+            const res = await axios({
+                method: 'post',
+                url: 'https://ezgif.com/webp-to-jpg',
+                data: form,
+                headers: {
+                    'Content-Type': `multipart/form-data; boundary=${form._boundary}`,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+                }
+            });
+            
+            const $ = cheerio.load(res.data);
+            const file = $('input[name="file"]').attr('value');
+            if (!file) throw new Error('File upload failed');
+            
+            const form2 = new FormData();
+            form2.append('file', file);
+            form2.append('convert', "Convert WebP to JPG!");
+            
+            const res2 = await axios({
+                method: 'post',
+                url: 'https://ezgif.com/webp-to-jpg/' + file,
+                data: form2,
+                headers: {
+                    'Content-Type': `multipart/form-data; boundary=${form2._boundary}`,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+                }
+            });
+            
+            const $2 = cheerio.load(res2.data);
+            const src = $2('div#output > p.outfile > img').attr('src');
+            if (!src) throw new Error('Conversion failed');
+            
+            resolve('https:' + src);
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
 async function writeExif(media, packname, author) {
     const json = {
         "sticker-pack-id": "noya-baileys-id",
@@ -78,6 +125,53 @@ async function writeExif(media, packname, author) {
     } finally {
         if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
     }
+}
+
+async function img2webpFile(path) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const form = new FormData();
+            form.append('new-image-url', '');
+            form.append('new-image', fs.createReadStream(path));
+            
+            const res = await axios({
+                method: 'post',
+                url: 'https://ezgif.com/webp-maker',
+                data: form,
+                headers: {
+                    'Content-Type': `multipart/form-data; boundary=${form._boundary}`,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+                }
+            });
+            
+            const $ = cheerio.load(res.data);
+            const file = $('input[name="file"]').attr('value');
+            if (!file) throw new Error('File upload failed');
+            
+            const form2 = new FormData();
+            form2.append('file', file);
+            form2.append('ms', "5"); // Delay
+            form2.append('makewebp', "Make WebP!");
+            
+            const res2 = await axios({
+                method: 'post',
+                url: 'https://ezgif.com/webp-maker/' + file,
+                data: form2,
+                headers: {
+                    'Content-Type': `multipart/form-data; boundary=${form2._boundary}`,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+                }
+            });
+            
+            const $2 = cheerio.load(res2.data);
+            const src = $2('div#output > p.outfile > img').attr('src');
+            if (!src) throw new Error('Conversion failed');
+            
+            resolve('https:' + src);
+        } catch (err) {
+            reject(err);
+        }
+    });
 }
 
 async function downloadMedia(message, type) {
@@ -142,14 +236,24 @@ module.exports = async function stickerCmd(sock, msg, command, args, from, prefi
                 
                 tempFiles.push(inputPath, outputPath);
                 fs.writeFileSync(inputPath, mediaBuffer);
-
-                if (type === 'image') {
-                    await execPromise(`ffmpeg -i ${inputPath} -vcodec libwebp -vframes 1 -s 512:512 ${outputPath}`);
-                } else {
-                    await execPromise(`ffmpeg -i ${inputPath} -vcodec libwebp -filter:v fps=fps=15 -loop 0 -preset default -an -vsync 0 -s 512:512 ${outputPath}`);
+                
+                try {
+                    if (type === 'image') {
+                        await execPromise(`"${ffmpegPath}" -i "${inputPath}" -vcodec libwebp -vframes 1 -s 512:512 "${outputPath}"`);
+                    } else {
+                        await execPromise(`"${ffmpegPath}" -i "${inputPath}" -vcodec libwebp -filter:v fps=fps=15 -loop 0 -preset default -an -vsync 0 -s 512:512 "${outputPath}"`);
+                    }
+                    stickerBuffer = fs.readFileSync(outputPath);
+                } catch (e) {
+                    // Fallback to Ezgif if FFmpeg fails
+                    try {
+                        const webpUrl = await img2webpFile(inputPath);
+                        const { data } = await axios.get(webpUrl, { responseType: 'arraybuffer' });
+                        stickerBuffer = data;
+                    } catch (err) {
+                        return replyError('Gagal membuat stiker. FFmpeg tidak ditemukan dan konversi online juga gagal.');
+                    }
                 }
-
-                stickerBuffer = fs.readFileSync(outputPath);
             }
 
             if (command === 'swm' || command === 'stikerwm') {
@@ -206,20 +310,25 @@ module.exports = async function stickerCmd(sock, msg, command, args, from, prefi
                     const { data } = await axios.get(mp4Url, { responseType: 'arraybuffer' });
                     await sock.sendMessage(from, { video: data }, { quoted: msg });
                 } catch (e) {
-                    replyError('Gagal memproses konversi video animasi (Server Ezgif menolak permintaan).');
+                    replyError('Gagal konversi animasi. Pastikan koneksi internet stabil atau coba stiker lain.');
                 }
             } else {
-                const outputPath = path.join(tempDir, `${Date.now()}.jpg`);
+                const outputPath = path.join(tempDir, `${Date.now()}.png`);
                 tempFiles.push(outputPath);
                 
                 try {
-                    await execPromise(`ffmpeg -vcodec libwebp -i ${inputPath} -vframes 1 ${outputPath}`);
+                    await execPromise(`"${ffmpegPath}" -i "${inputPath}" "${outputPath}"`);
+                    const imageBuffer = fs.readFileSync(outputPath);
+                    await sock.sendMessage(from, { image: imageBuffer }, { quoted: msg });
                 } catch (e) {
-                    await execPromise(`ffmpeg -i ${inputPath} -vframes 1 ${outputPath}`);
+                    try {
+                        const imgUrl = await webp2imgFile(inputPath);
+                        const { data } = await axios.get(imgUrl, { responseType: 'arraybuffer' });
+                        await sock.sendMessage(from, { image: data }, { quoted: msg });
+                    } catch (err) {
+                        replyError('Gagal konversi stiker. FFmpeg tidak ditemukan dan konversi online juga gagal.');
+                    }
                 }
-                
-                const imageBuffer = fs.readFileSync(outputPath);
-                await sock.sendMessage(from, { image: imageBuffer }, { quoted: msg });
             }
         }
 

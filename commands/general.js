@@ -129,16 +129,64 @@ module.exports = async function generalCmd(sock, msg, command, isOwner, dbs, pre
             return await sock.sendMessage(from, { text: `${prefix}welcome on / off` }, { quoted: msg });
         }
         if (command === 'setwelcome') {
+            const fs = require('fs');
+            const { downloadMediaMessage } = require('@phrolovaa/baileys');
+            
+            const contextInfo = msg.message?.extendedTextMessage?.contextInfo
+                || msg.message?.imageMessage?.contextInfo;
+            const quotedMsg = contextInfo?.quotedMessage;
+            
+            let mediaMsg = null;
+            if (msg.message.imageMessage) {
+                mediaMsg = msg;
+            } else if (quotedMsg?.imageMessage) {
+                mediaMsg = {
+                    key: {
+                        remoteJid: from,
+                        id: contextInfo?.stanzaId,
+                        participant: contextInfo?.participant || undefined,
+                        fromMe: false,
+                    },
+                    message: quotedMsg,
+                };
+            }
+
             const t = args.join(' ');
-            if (!t) return await sock.sendMessage(from, { text: `Variabel: @user @group @desc\nContoh: ${prefix}setwelcome Halo @user!` }, { quoted: msg });
-            dbs.groupDb[from].welcomeText = t;
+
+            if (!t && !mediaMsg) {
+                return await sock.sendMessage(from, { text: `Kirim atau reply gambar dengan caption, atau cukup teks saja.\n\nVariabel: @user @group @desc\nContoh: ${prefix}setwelcome Halo @user!` }, { quoted: msg });
+            }
+
+            if (t) {
+                dbs.groupDb[from].welcomeText = t;
+            }
+
+            if (mediaMsg) {
+                try {
+                    const buf = await downloadMediaMessage(mediaMsg, 'buffer', {});
+                    const imagePath = `./media/welcome_${from.split('@')[0]}.jpg`;
+                    fs.writeFileSync(imagePath, buf);
+                    dbs.groupDb[from].welcomeImage = imagePath;
+                } catch (e) {
+                    console.error('Failed to save welcome image:', e);
+                    return await sock.sendMessage(from, { text: 'Gagal menyimpan gambar welcome.' }, { quoted: msg });
+                }
+            }
+
             await saveDb('groupDb');
-            return await sock.sendMessage(from, { text: 'Teks welcome disimpan.' }, { quoted: msg });
+            return await sock.sendMessage(from, { text: `Teks ${mediaMsg ? '& gambar ' : ''}welcome berhasil disimpan.` }, { quoted: msg });
         }
         if (command === 'delwelcome') {
             delete dbs.groupDb[from].welcomeText;
+            if (dbs.groupDb[from].welcomeImage) {
+                const fs = require('fs');
+                if (fs.existsSync(dbs.groupDb[from].welcomeImage)) {
+                    fs.unlinkSync(dbs.groupDb[from].welcomeImage);
+                }
+                delete dbs.groupDb[from].welcomeImage;
+            }
             await saveDb('groupDb');
-            return await sock.sendMessage(from, { text: 'Teks welcome dihapus.' }, { quoted: msg });
+            return await sock.sendMessage(from, { text: 'Teks & gambar welcome dihapus.' }, { quoted: msg });
         }
     }
 

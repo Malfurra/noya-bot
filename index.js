@@ -150,13 +150,39 @@ async function connectToWhatsApp() {
                 let welcomeText = dbs.groupDb[id].welcomeText || `Halo @user, selamat datang di grup @group!`;
                 let userJid = typeof num === 'string' ? num : num.id;
                 
-                welcomeText = welcomeText.replace('@user', `@${userJid.split('@')[0]}`)
-                                         .replace('@group', groupName)
-                                         .replace('@desc', groupDesc);
+                welcomeText = welcomeText.replace(/@user/g, `@${userJid.split('@')[0]}`)
+                                         .replace(/@group/g, `@${groupName}`)
+                                         .replace(/@desc/g, groupDesc);
+
+                const mentions = [userJid, id];
+                const contextInfo = {
+                    groupMentions: [
+                        {
+                            groupJid: id,
+                            groupSubject: groupName
+                        }
+                    ],
+                    nonJidMentions: 1
+                };
+                
+                const welcomeImage = dbs.groupDb[id].welcomeImage;
+                if (welcomeImage) {
+                    const fs = require('fs');
+                    if (fs.existsSync(welcomeImage)) {
+                        await sock.sendMessage(id, { 
+                            image: fs.readFileSync(welcomeImage),
+                            caption: welcomeText,
+                            mentions: mentions,
+                            contextInfo: contextInfo
+                        });
+                        continue;
+                    }
+                }
 
                 await sock.sendMessage(id, { 
                     text: welcomeText,
-                    mentions: [userJid]
+                    mentions: mentions,
+                    contextInfo: contextInfo
                 });
             }
         } catch (err) {
